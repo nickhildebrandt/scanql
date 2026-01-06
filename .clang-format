@@ -1,0 +1,89 @@
+# ============================================================
+# clang-format configuration
+# Project: C (C23)
+# Style: LLVM-based, strict, readable, CI-enforced
+# ============================================================
+
+BasedOnStyle: LLVM
+
+# ------------------------------------------------------------
+# Indentation & Whitespace
+# ------------------------------------------------------------
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+InsertTrailingCommas: None
+
+# ------------------------------------------------------------
+# Line length & wrapping
+# ------------------------------------------------------------
+ColumnLimit: 80
+PenaltyBreakString: 1
+PenaltyBreakComment: 1
+PenaltyExcessCharacter: 1000000
+
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+
+# ------------------------------------------------------------
+# Braces & control structures
+# ------------------------------------------------------------
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterControlStatement: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterEnum: true
+  AfterUnion: true
+  BeforeElse: true
+  IndentBraces: false
+
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+
+# ------------------------------------------------------------
+# If / else / switch rules
+# ------------------------------------------------------------
+SpaceBeforeParens: ControlStatements
+SpacesInParens: Never
+
+IndentCaseLabels: true
+IndentCaseBlocks: true
+
+# ------------------------------------------------------------
+# Pointer & operators
+# ------------------------------------------------------------
+PointerAlignment: Left        # int* p
+DerivePointerAlignment: false
+
+SpaceBeforeAssignmentOperators: true
+
+AlignOperands: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: false
+
+# ------------------------------------------------------------
+# Functions & parameters
+# ------------------------------------------------------------
+BinPackArguments: false
+BinPackParameters: false
+
+AllowAllConstructorInitializersOnNextLine: false
+
+# ------------------------------------------------------------
+# Includes
+# ------------------------------------------------------------
+SortIncludes: true
+IncludeBlocks: Regroup
+
+# ------------------------------------------------------------
+# Comments
+# ------------------------------------------------------------
+ReflowComments: true
+CommentPragmas: '^ IWYU pragma:'

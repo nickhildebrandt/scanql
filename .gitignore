@@ -1,0 +1,6 @@
+# Clang cache files
+.clangd/
+.cache/
+
+# Default build directory
+build/

@@ -10,3 +10,5 @@ run_target(
 )
 
 subdir('src')
+
+subdir('tests')

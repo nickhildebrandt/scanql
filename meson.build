@@ -4,9 +4,11 @@ project('scanql', 'c',
 
 clang_format = find_program('clang-format', required: false)
 
+format_script = join_paths(meson.project_source_root(), 'scripts', 'format-code.sh')
+
 run_target(
   'format',
-  command: ['bash', files('scripts/format-code.sh')]
+  command: [find_program('bash'), files(format_script)]
 )
 
 subdir('src')

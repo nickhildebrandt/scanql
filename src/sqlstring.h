@@ -33,3 +33,7 @@ SqlString* append_sql_string(SqlString* base_string, const char* value);
  * Returns '\0' if index is out of bounds.
  */
 char sql_string_get_char(const SqlString* sql_str, int index);
+
+/* Get the total length of the SqlString counting all characters
+ */
+size_t sql_string_length(const SqlString* sql_str);

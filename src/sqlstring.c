@@ -141,3 +141,24 @@ char sql_string_get_char(const SqlString* sql_str, int index)
 
     return *current_value;
 }
+
+/* Get the total length of the SqlString counting all characters
+ */
+size_t sql_string_length(const SqlString* sql_str)
+{
+    if (!sql_str)
+    {
+        return 0;
+    }
+
+    size_t total_length      = 0;
+    const SqlString* current = sql_str;
+
+    while (current)
+    {
+        total_length += current->length;
+        current = current->next;
+    }
+
+    return total_length;
+}

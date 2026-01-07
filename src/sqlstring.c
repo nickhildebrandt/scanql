@@ -117,29 +117,26 @@ SqlString* append_sql_string(SqlString* base_string, const char* value)
  */
 char sql_string_get_char(const SqlString* sql_str, int index)
 {
-    if (!sql_str || index < 0 || (size_t)index >= sql_str->length)
+    if (!sql_str || index < 0)
     {
         return '\0';
     }
 
-    char* current_value = sql_str->value;
-    SqlString* next     = sql_str->next;
+    size_t idx = (size_t)index;
+    const SqlString* current = sql_str;
 
-    for (int i = 0; i < index; i++)
+    while (current)
     {
-        current_value++;
-        if (!current_value)
+        if (idx < current->length)
         {
-            if (!next)
-            {
-                return '\0';
-            }
-            current_value = next->value;
+            return current->value[idx];
         }
-        current_value++;
+
+        idx -= current->length;
+        current = current->next;
     }
 
-    return *current_value;
+    return '\0';
 }
 
 /* Get the total length of the SqlString counting all characters

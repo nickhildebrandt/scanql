@@ -1,5 +1,12 @@
 #include <stdio.h>
 
+/**
+ * main - Program entry point
+ * @argc: Number of command line arguments
+ * @argv: Array of command line argument strings
+ *
+ * Return: 0 on success, non-zero on usage error
+ */
 int main(int argc, char* argv[])
 {
     if (argc != 2)

@@ -3,36 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct
-{
-    char* value;
-    SqlToken type;
-} Token;
-
-void printToken(Token t)
-{
-    printf("Token { value: %s, type: %d}\n", t.value, t.type);
-}
-
-typedef struct
-{
-    Token* elems; // Pointer to an array of Token elements, representing the
-                  // stack's contents.
-    int len; // The current length of the stack, indicating how many tokens are
-             // currently in it.
-    int cap; // The capacity of the stack, which indicates the maximum number of
-             // tokens it can hold before needing to be resized.
-} TokenStack;
-
-void append(TokenStack* list, Token t)
-{
-    if (list->len <= list->cap)
-    {
-        list->elems[list->len] = t;
-        list->len += 1;
-    }
-}
-
 /**
  * main - Program entry point
  * @argc: Number of command line arguments

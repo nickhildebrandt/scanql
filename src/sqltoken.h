@@ -1,4 +1,8 @@
+#pragma once
 
+/*
+ * SqlToken - Enumeration of SQL token types
+*/
 typedef enum : unsigned short
 {
     SELECT,
@@ -9,5 +13,13 @@ typedef enum : unsigned short
     NEGATION,
     NUMBER,
     STRING,
-    // TODO : NOT , IN , NULL
-} Symbols;
+    NOT,
+    IN,
+    SQL_NULL,
+    AND,
+    OR,
+    ASTERISK,
+    SEMICOLON,
+    OPEN_PAREN,
+    CLOSE_PAREN,
+} SqlToken;

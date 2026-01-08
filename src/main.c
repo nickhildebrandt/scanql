@@ -1,24 +1,12 @@
+#include <sqltoken.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum : unsigned short
-{
-    SELECT,
-    FROM,
-    WHERE,
-    COMMA,
-    EQUALS,
-    NEGATION,
-    NUMBER,
-    STRING,
-    // TODO : NOT , IN , NULL
-} Symbols;
-
 typedef struct
 {
     char* value;
-    Symbols type;
+    SqlToken type;
 } Token;
 
 void printToken(Token t)

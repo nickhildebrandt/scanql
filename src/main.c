@@ -1,4 +1,7 @@
-#include <sqltoken.h>
+#include "sql-token-stack.h"
+#include "sql-token.h"
+#include "sql-token.c"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,20 +22,26 @@ int main(int argc, char* argv[])
     }
     printf("Received SQL String: %s\n", argv[1]);
 
-    char* txt         = "select t from b"; // TODO: use argv here
-    size_t tokenCount = strlen(txt);
+    char* txt         = argv[1];
+    size_t txt_len    = strlen(txt);
+    size_t tokenCount = txt_len;
 
     TokenStack tokenList;
     tokenList.elems = malloc(tokenCount * sizeof(Token));
+    tokenList.len   = 0;
     tokenList.cap   = tokenCount;
 
     int i = 0;
-    while (i <= (int)strlen(txt))
+    while (i < (int)txt_len)
     {
         Token token;
 
         char c = txt[i];
-        printf("%c\n", c);
+        if (c == ' ')
+        {
+            i++;
+            continue;
+        }
         switch (c)
         {
             case 'S':
@@ -54,7 +63,7 @@ int main(int argc, char* argv[])
             case 'f':
             case 'F':
                 {
-                    if (txt[i + 1] == 'r')
+                    if (txt[i + 1] == 'r' || txt[i + 1] == 'R')
                     { // TODO: implement point compare system && look
                       // if from is already set
                         token.type = FROM;
@@ -75,8 +84,6 @@ int main(int argc, char* argv[])
                     token.type = NEGATION;
                 }
                 break;
-            case ' ':
-                break;
             default:
                 {
                     token.type = STRING;
@@ -85,21 +92,32 @@ int main(int argc, char* argv[])
         }
 
         int start = i;
-        while (c != ' ')
+        while (c != ' ' && c != '\0')
         {
             i++;
             c = txt[i];
         }
         int end     = i;
-        token.value = malloc(end - start);
-        strncpy(token.value, txt + start, end - start);
-        append(&tokenList, token);
-        i++;
+        token.value = malloc((end - start) + 1);
+        if (token.value)
+        {
+            strncpy(token.value, txt + start, end - start);
+            token.value[end - start] = '\0';
+        }
+        if (tokenList.len < tokenList.cap)
+        {
+            tokenList.elems[tokenList.len] = token;
+            tokenList.len += 1;
+        }
+        while (txt[i] == ' ')
+        {
+            i++;
+        }
     }
 
     for (int i = 0; i < tokenList.len; i++)
     {
-        printToken(tokenList.elems[i]);
+        print_token(tokenList.elems[i]);
     }
 
     return 0;

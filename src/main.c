@@ -1,10 +1,45 @@
+#include "sql-token-stack.c"
 #include "sql-token-stack.h"
-#include "sql-token.h"
 #include "sql-token.c"
+#include "sql-token.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+typedef unsigned char u8;
+typedef struct
+{
+    u8* data;
+    size_t size;
+    size_t capacity;
+} Arena;
+
+Arena init_static_arena(size_t capacity)
+{
+    u8* data = malloc(capacity);
+    Arena a  = {.data = data, .size = 0, .capacity = capacity};
+    return a;
+}
+
+void* static_arena_alloc(Arena* arena, size_t size)
+{
+    if (arena->size + size < arena->capacity)
+    {
+        u8* data = &arena->data[arena->size];
+        arena->size += size;
+        return data;
+    }
+    return NULL;
+}
+
+void arena_free(Arena* arena)
+{
+    free(arena->data);
+    arena->size     = 0;
+    arena->capacity = 0;
+}
 
 /**
  * main - Program entry point
@@ -25,6 +60,8 @@ int main(int argc, char* argv[])
     char* txt         = argv[1];
     size_t txt_len    = strlen(txt);
     size_t tokenCount = txt_len;
+
+    Arena arena = init_static_arena(2 * txt_len);
 
     TokenStack tokenList;
     tokenList.elems = malloc(tokenCount * sizeof(Token));
@@ -92,27 +129,17 @@ int main(int argc, char* argv[])
         }
 
         int start = i;
-        while (c != ' ' && c != '\0')
+        while (c != ' ' && c != '\0') // TODO: consider ; so its a own token
         {
             i++;
             c = txt[i];
         }
-        int end     = i;
-        token.value = malloc((end - start) + 1);
-        if (token.value)
-        {
-            strncpy(token.value, txt + start, end - start);
-            token.value[end - start] = '\0';
-        }
-        if (tokenList.len < tokenList.cap)
-        {
-            tokenList.elems[tokenList.len] = token;
-            tokenList.len += 1;
-        }
-        while (txt[i] == ' ')
-        {
-            i++;
-        }
+        int end = i;
+
+        token.value = static_arena_alloc(&arena, (end - start) + 1);
+        strncpy(token.value, txt + start, end - start);
+        token.value[end - start] = '\0';
+        append(&tokenList, token);
     }
 
     for (int i = 0; i < tokenList.len; i++)

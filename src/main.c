@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     // printf("Received SQL String: %s\n", argv[1]);
 
     // char* txt         = argv[1];
-    char* txt         = "w;";
+    char* txt         = "select h,a";
     size_t txt_len    = strlen(txt);
     size_t tokenCount = txt_len;
 
@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
         switch (c)
         {
             case ' ':
+                i++;
                 continue;
             case 'S':
             case 's':

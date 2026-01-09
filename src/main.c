@@ -1,3 +1,4 @@
+#include "sql-symbols.h"
 #include "sql-token-stack.c"
 #include "sql-token-stack.h"
 #include "sql-token.c"
@@ -50,14 +51,15 @@ void arena_free(Arena* arena)
  */
 int main(int argc, char* argv[])
 {
-    if (argc != 2)
-    {
-        printf("Usage: %s <SQL-String>\n", argv[0]);
-        return 1;
-    }
-    printf("Received SQL String: %s\n", argv[1]);
+    // if (argc != 2)
+    // {
+    //     printf("Usage: %s <SQL-String>\n", argv[0]);
+    //     return 1;
+    // }
+    // printf("Received SQL String: %s\n", argv[1]);
 
-    char* txt         = argv[1];
+    // char* txt         = argv[1];
+    char* txt         = "w;";
     size_t txt_len    = strlen(txt);
     size_t tokenCount = txt_len;
 
@@ -69,18 +71,17 @@ int main(int argc, char* argv[])
     tokenList.cap   = tokenCount;
 
     int i = 0;
-    while (i < (int)txt_len)
+    while (i < (int)txt_len) // TODO : tokenizer needs to split by mutiple
+                             // things not just spaces like for cases where no
+                             // spaces are there e.g ("h","a")
     {
         Token token;
 
         char c = txt[i];
-        if (c == ' ')
-        {
-            i++;
-            continue;
-        }
         switch (c)
         {
+            case ' ':
+                continue;
             case 'S':
             case 's':
                 if (i == 0)
@@ -121,6 +122,9 @@ int main(int argc, char* argv[])
                     token.type = NEGATION;
                 }
                 break;
+            case ';':
+                token.type = SEMICOLON;
+                break;
             default:
                 {
                     token.type = STRING;
@@ -128,8 +132,17 @@ int main(int argc, char* argv[])
                 break;
         }
 
+        if (c == ';')
+        {
+            token.value = static_arena_alloc(&arena, 2);
+            token.value = ";\0";
+            append(&tokenList, token);
+            i++;
+            continue;
+        }
+
         int start = i;
-        while (c != ' ' && c != '\0') // TODO: consider ; so its a own token
+        while (c != ' ' && c != '\0' && c != ';') // until seperators
         {
             i++;
             c = txt[i];

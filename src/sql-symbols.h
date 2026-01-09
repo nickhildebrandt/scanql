@@ -5,6 +5,7 @@
  */
 typedef enum : unsigned short
 {
+    // Keywords
     SELECT,
     FROM,
     WHERE,
@@ -30,7 +31,6 @@ typedef enum : unsigned short
     AND,
     OR,
     SEMICOLON,
-    PAREN,
     ROUND_BRACKETS_OPEN,
     ROUND_BRACKETS_CLOSE,
     INLINE_COMMENT_MINUS,

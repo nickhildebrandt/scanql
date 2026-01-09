@@ -133,7 +133,8 @@ int main(int argc, char* argv[])
                 break;
         }
 
-        if (c == ';')
+        if (c == ';') // TODO: Maybe handle the exceptions here in the switch
+                      // case
         {
             token.value = static_arena_alloc(&arena, 2);
             token.value = ";\0";
@@ -142,8 +143,18 @@ int main(int argc, char* argv[])
             continue;
         }
 
+        if (c == ',')
+        {
+            token.value = static_arena_alloc(&arena, 2);
+            token.value = ",\0";
+            append(&tokenList, token);
+            i++;
+            continue;
+        }
+
         int start = i;
-        while (c != ' ' && c != '\0' && c != ';') // until seperators
+        while (c != ' ' && c != '\0' && c != ';' && c != ',') // until
+                                                              // seperators
         {
             i++;
             c = txt[i];

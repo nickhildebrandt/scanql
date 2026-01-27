@@ -4,6 +4,7 @@
 #include "sql-token.c"
 #include "sql-token.h"
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,52 +60,34 @@ void arena_free(Arena* arena)
     arena->capacity = 0;
 }
 
-/**
- * main - Program entry point
- * @argc: Number of command line arguments
- * @argv: Array of command line argument strings
- *
- * Return: 0 on success, non-zero on usage error
- */
-int main(int argc, char* argv[])
+TokenStack get_Tokens(char* txt, Arena* arena)
 {
-    (void)argc;
-    (void)argv;
-    // if (argc != 2)
-    // {
-    //     printf("Usage: %s <SQL-String>\n", argv[0]);
-    //     return 1;
-    // }
-    // printf("Received SQL String: %s\n", argv[1]);
-
-    // char* txt         = argv[1];
-    char* txt         = "select h,a";
     size_t txt_len    = strlen(txt);
     size_t tokenCount = txt_len;
-
-    Arena arena = init_static_arena(2 * txt_len);
 
     TokenStack tokenList;
     tokenList.elems = malloc(tokenCount * sizeof(Token));
     tokenList.len   = 0;
     tokenList.cap   = tokenCount;
 
-    int i = 0;
-    while (i < (int)txt_len) // TODO : tokenizer needs to split by mutiple
-                             // things not just spaces like for cases where no
-                             // spaces are there e.g ("h","a")
+    int index      = 0;
+    int last_index = (int)txt_len - 1;
+    while (index < last_index) // TODO : tokenizer needs to split by
+                               // mutiple things not just spaces like for
+                               // cases where no spaces are there e.g
+                               // ("h","a")
     {
         Token token;
 
-        char c = txt[i];
+        char c = txt[index];
         switch (c)
         {
             case ' ':
-                i++;
+                index++;
                 continue;
             case 'S':
             case 's':
-                if (i == 0)
+                if (index == 0)
                 {
                     token.type = SELECT;
                 }
@@ -115,13 +98,17 @@ int main(int argc, char* argv[])
                 break;
             case ',':
                 {
-                    token.type = COMMA;
-                    break;
+                    token.type  = COMMA;
+                    token.value = static_arena_alloc(arena, 2);
+                    token.value = ",\0";
+                    append(&tokenList, token);
+                    index++;
+                    continue;
                 }
             case 'f':
             case 'F':
                 {
-                    if (txt[i + 1] == 'r' || txt[i + 1] == 'R')
+                    if (txt[index + 1] == 'r' || txt[index + 1] == 'R')
                     { // TODO: implement point compare system && look
                       // if from is already set
                         token.type = FROM;
@@ -143,8 +130,49 @@ int main(int argc, char* argv[])
                 }
                 break;
             case ';':
-                token.type = SEMICOLON;
-                break;
+                token.type  = SEMICOLON;
+                token.value = static_arena_alloc(arena, 2);
+                token.value = ";\0";
+                append(&tokenList, token);
+                index++;
+                continue;
+            case '"':
+            case '\'':
+                token.type = STRING_VALUE;
+
+                char seperator = '\xcd';
+                if (c == '\'')
+                {
+                    seperator = '\'';
+                }
+                else
+                {
+                    seperator = '"';
+                }
+
+                int start = index;
+
+                index++;
+                c = txt[index];
+
+                while (c != seperator && index < last_index) // until
+                                                             // seperators
+                {
+                    c = txt[index];
+                    index++;
+                }
+                index++; // include seperator
+
+                int end = index;
+                assert(end > start && "end should be bigger than start");
+
+                token.value = static_arena_alloc(arena, (end - start) + 1);
+                strncpy(token.value, txt + start, end - start);
+                token.value[end - start] = '\0';
+                printf("%d\n", (int)strlen(token.value));
+
+                append(&tokenList, token);
+                continue;
             default:
                 {
                     token.type = STRING;
@@ -152,39 +180,50 @@ int main(int argc, char* argv[])
                 break;
         }
 
-        if (c == ';') // TODO: Maybe handle the exceptions here in the switch
-                      // case
+        int start = index;
+        while (c != ' ' && c != '\0' && c != ';' && c != ',' &&
+               index < last_index) // until
+                                   // seperators
         {
-            token.value = static_arena_alloc(&arena, 2);
-            token.value = ";\0";
-            append(&tokenList, token);
-            i++;
-            continue;
+            index++;
+            c = txt[index];
         }
+        index++; // include seperator
+        int end = index;
+        assert(end > start && "end should be bigger than start");
 
-        if (c == ',')
-        {
-            token.value = static_arena_alloc(&arena, 2);
-            token.value = ",\0";
-            append(&tokenList, token);
-            i++;
-            continue;
-        }
-
-        int start = i;
-        while (c != ' ' && c != '\0' && c != ';' && c != ',') // until
-                                                              // seperators
-        {
-            i++;
-            c = txt[i];
-        }
-        int end = i;
-
-        token.value = static_arena_alloc(&arena, (end - start) + 1);
+        token.value = static_arena_alloc(arena, (end - start) + 1);
         strncpy(token.value, txt + start, end - start);
         token.value[end - start] = '\0';
         append(&tokenList, token);
     }
+
+    return tokenList;
+}
+
+/**
+ * main - Program entry point
+ * @argc: Number of command line arguments
+ * @argv: Array of command line argument strings
+ *
+ * Return: 0 on success, non-zero on usage error
+ */
+int main(int argc, char* argv[])
+{
+    // if (argc != 2)
+    // {
+    //     printf("Usage: %s <SQL-String>\n", argv[0]);
+    //     return 1;
+    // }
+    // printf("Received SQL String: %s\n", argv[1]);
+
+    // char* txt         = argv[1];
+    char* txt      = "\'from\'";
+    size_t txt_len = strlen(txt);
+
+    Arena arena = init_static_arena(2 * txt_len);
+
+    TokenStack tokenList = get_Tokens(txt, &arena);
 
     for (int i = 0; i < tokenList.len; i++)
     {

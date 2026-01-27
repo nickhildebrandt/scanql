@@ -15,11 +15,14 @@ typedef enum : unsigned short
     IF,
     EXISTS,
     INSERT,
-    ENUM,
     INTO,
     NOT,
     IN,
     null,
+
+    // Types
+    TYPE_TEXT,
+    TYPE_ENUM,
 
     // special character
     COMMA,
@@ -27,6 +30,7 @@ typedef enum : unsigned short
     NEGATION,
     NUMBER,
     STRING,
+    STRING_VALUE,
     SQL_NULL,
     AND,
     OR,

@@ -41,7 +41,8 @@ typedef struct {
  * @result: output structure holding errors and summary
  *
  * Returns: true if no errors were found, false otherwise. Continues after
- * mismatches until EOF to accumulate all errors.
+ * mismatches until EOF to accumulate all errors, but aborts early on
+ * unsupported/invalid tokens (still recording that fatal stop).
  */
 bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* result);
 

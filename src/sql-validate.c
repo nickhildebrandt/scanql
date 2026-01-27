@@ -205,6 +205,10 @@ bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* resu
     result->error_count  = 0;
 
     parser_t p = {.expected = EXP_SELECT};
+    bool aborted = false;
+    int abort_pos = -1;
+    const Token* abort_token = NULL;
+    SqlTokenExpected abort_expected = EXP_END;
 
     /* iterate through tokens, treat array end as EOF */
     for (int i = 0; i <= tokens->len; ++i)
@@ -215,7 +219,11 @@ bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* resu
         if (!is_eof && !token_is_valid_lexeme(t))
         {
             record_error(result, t, i, p.expected, "invalid token");
-            continue;
+            aborted        = true;
+            abort_pos      = i;
+            abort_token    = t;
+            abort_expected = p.expected;
+            break;
         }
 
         if (!accept(&p, t, is_eof))
@@ -223,6 +231,16 @@ bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* resu
             record_error(result, t, i, p.expected, "unexpected token");
             continue;
         }
+    }
+
+    if (aborted)
+    {
+        record_error(result,
+                     abort_token,
+                     abort_pos >= 0 ? abort_pos : tokens->len,
+                     abort_expected,
+                     "fatal: stopped parsing after invalid token");
+        return result->ok;
     }
 
     if (p.expected != EXP_END)

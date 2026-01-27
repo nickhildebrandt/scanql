@@ -2,6 +2,8 @@
 #include "sql-token.h"
 #include "test_asserts.h"
 
+#include <string.h>
+
 static int failures = 0;
 
 /**
@@ -153,6 +155,45 @@ static void test_accumulates_multiple_errors(void)
 }
 
 /**
+ * test_invalid_token_aborts_early - Invalid lexeme should halt validation
+ */
+static void test_invalid_token_aborts_early(void)
+{
+    Token toks[] = {
+        {.value = "SELECT", .type = SELECT},
+        {.value = "a", .type = STRING},
+        {.value = "FROM", .type = FROM},
+        {.value = "t", .type = STRING},
+        {.value = "(", .type = ROUND_BRACKETS_OPEN}, /* unsupported token */
+        {.value = ";", .type = SEMICOLON},
+    };
+    TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
+    ValidationError errs[8];
+    ValidationResult res = {.errors = errs, .error_capacity = 8};
+    bool ok = validate_query_with_errors(&s, &res);
+
+    expect_true(&failures,
+                !ok,
+                __FILE__,
+                __LINE__,
+                "fatal invalid token should fail validation");
+    expect_eq_size_t(&failures,
+                     res.error_count,
+                     2,
+                     __FILE__,
+                     __LINE__,
+                     "validator should stop after fatal token and record abort");
+
+    /* Second error should describe the fatal stop */
+    expect_true(&failures,
+                res.errors[1].message &&
+                    strcmp(res.errors[1].message, "fatal: stopped parsing after invalid token") == 0,
+                __FILE__,
+                __LINE__,
+                "fatal stop message recorded");
+}
+
+/**
  * main - Run all unit tests for SqlValidate
  */
 int main(void)
@@ -162,6 +203,7 @@ int main(void)
     test_invalid_missing_from();
     test_invalid_trailing_after_semicolon();
     test_accumulates_multiple_errors();
+    test_invalid_token_aborts_early();
 
     if (failures == 0)
         return 0;

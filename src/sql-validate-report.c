@@ -48,7 +48,8 @@ static const char* symbol_to_str(SqlSymbols s)
     case IF: return "IF";
     case EXISTS: return "EXISTS";
     case INSERT: return "INSERT";
-    case ENUM: return "ENUM";
+    case TYPE_TEXT: return "TYPE_TEXT";
+    case TYPE_ENUM: return "TYPE_ENUM";
     case INTO: return "INTO";
     case NOT: return "NOT";
     case IN: return "IN";

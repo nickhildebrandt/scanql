@@ -1,8 +1,11 @@
 srcs = files(
   'main.c',
+  'tokenizer.c',
   'sqlstring.c',
   'sql-validate.c',
   'sql-validate-report.c',
+  'sql-token.c',
+  'sql-token-stack.c',
 )
 
 inc = include_directories('.')

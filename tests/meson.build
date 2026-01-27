@@ -54,3 +54,20 @@ test(
   'sqlvalidate_report',
   test_sqlvalidate_report_exe,
 )
+
+test_tokenizer_exe = executable(
+  'test_tokenizer',
+  files(
+    'test_tokenizer.c',
+    '../src/tokenizer.c',
+    '../src/sql-token.c',
+    '../src/sql-token-stack.c',
+    '../src/sql-validate.c',
+  ),
+  include_directories : inc,
+)
+
+test(
+  'tokenizer',
+  test_tokenizer_exe,
+)

@@ -1,5 +1,6 @@
 #include "sql-validate-report.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -87,8 +88,7 @@ static void describe_token(const ValidationError* e, char* buf, size_t n)
 
 void print_validation_result(const ValidationResult* result)
 {
-    if (!result)
-        return;
+    assert(result != NULL);
 
     if (result->ok)
     {

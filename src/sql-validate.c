@@ -1,5 +1,6 @@
 #include "sql-validate.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -139,6 +140,7 @@ static void record_error(ValidationResult* r,
                          SqlTokenExpected expected,
                          const char* msg)
 {
+    assert(r != NULL);
     r->ok = false;
     if (r->error_count < r->error_capacity)
     {
@@ -153,8 +155,8 @@ static void record_error(ValidationResult* r,
 
 bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* result)
 {
-    if (!tokens || !result)
-        return false;
+    assert(tokens != NULL);
+    assert(result != NULL);
 
     result->ok           = true;
     result->error_count  = 0;

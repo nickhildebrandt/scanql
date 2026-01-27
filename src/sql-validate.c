@@ -133,10 +133,31 @@ static bool accept(parser_t *p, const Token *tok, bool is_eof)
     }
 }
 
-bool validate_query(const TokenStack *tokens)
+static void record_error(ValidationResult* r,
+                         const Token* tok,
+                         int pos,
+                         SqlTokenExpected expected,
+                         const char* msg)
 {
-    if (!tokens)
+    r->ok = false;
+    if (r->error_count < r->error_capacity)
+    {
+        ValidationError* e = &r->errors[r->error_count];
+        e->token          = tok;
+        e->position       = pos;
+        e->expected       = expected;
+        e->message        = msg;
+    }
+    r->error_count++;
+}
+
+bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* result)
+{
+    if (!tokens || !result)
         return false;
+
+    result->ok           = true;
+    result->error_count  = 0;
 
     parser_t p = {.expected = EXP_SELECT};
 
@@ -148,22 +169,37 @@ bool validate_query(const TokenStack *tokens)
 
         if (!is_eof && !token_is_valid_lexeme(t))
         {
-            fprintf(stderr, "validation error: invalid token at pos %d\n", i);
-            return false;
+            record_error(result, t, i, p.expected, "invalid token");
+            continue;
         }
 
         if (!accept(&p, t, is_eof))
         {
-            fprintf(stderr, "validation error: unexpected token at pos %d, expected state=%d\n",
-                    i, (int)p.expected);
-            return false;
+            record_error(result, t, i, p.expected, "unexpected token");
+            continue;
         }
     }
 
-    /* if we consumed EOF successfully then parser is OK */
-    if (p.expected == EXP_END)
-        return true;
+    if (p.expected != EXP_END)
+    {
+        record_error(result, NULL, tokens->len, p.expected, "incomplete query");
+    }
 
-    fprintf(stderr, "validation error: incomplete query, ended in state %d\n", (int)p.expected);
-    return false;
+    return result->ok;
+}
+
+bool validate_query(const TokenStack *tokens)
+{
+    if (!tokens)
+        return false;
+
+    ValidationError buf[tokens->len + 2];
+    ValidationResult res = {
+        .ok = true,
+        .error_count = 0,
+        .error_capacity = sizeof(buf) / sizeof(buf[0]),
+        .errors = buf,
+    };
+
+    return validate_query_with_errors(tokens, &res);
 }

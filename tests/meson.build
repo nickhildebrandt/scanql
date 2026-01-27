@@ -39,3 +39,18 @@ test(
   'sqlvalidate',
   test_sqlvalidate_exe,
 )
+
+test_sqlvalidate_report_exe = executable(
+  'test_sqlvalidate_report',
+  files(
+    'test_sqlvalidate_report.c',
+    '../src/sql-validate.c',
+    '../src/sql-validate-report.c',
+  ),
+  include_directories : inc,
+)
+
+test(
+  'sqlvalidate_report',
+  test_sqlvalidate_report_exe,
+)

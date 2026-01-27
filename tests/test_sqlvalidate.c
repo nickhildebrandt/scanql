@@ -63,11 +63,18 @@ static void test_invalid_missing_from(void)
         {.value = ";", .type = SEMICOLON},
     };
     TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
+    ValidationError errs[8];
+    ValidationResult res = {.errors = errs, .error_capacity = 8};
     expect_true(&failures,
-                !validate_query(&s),
+                !validate_query_with_errors(&s, &res),
                 __FILE__,
                 __LINE__,
                 "SELECT a t; should be invalid (missing FROM)");
+    expect_true(&failures,
+                res.error_count >= 1,
+                __FILE__,
+                __LINE__,
+                "error count recorded");
 }
 
 static void test_invalid_trailing_after_semicolon(void)
@@ -81,11 +88,46 @@ static void test_invalid_trailing_after_semicolon(void)
         {.value = "DROP", .type = STRING},
     };
     TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
+    ValidationError errs[8];
+    ValidationResult res = {.errors = errs, .error_capacity = 8};
     expect_true(&failures,
-                !validate_query(&s),
+                !validate_query_with_errors(&s, &res),
                 __FILE__,
                 __LINE__,
                 "Trailing tokens after ';' should be invalid");
+    expect_true(&failures,
+                res.error_count >= 1,
+                __FILE__,
+                __LINE__,
+                "error count recorded");
+}
+
+static void test_accumulates_multiple_errors(void)
+{
+    Token toks[] = {
+        {.value = "FROM", .type = FROM}, /* wrong start */
+        {.value = "SELECT", .type = SELECT},
+        {.value = "FROM", .type = FROM}, /* missing select item before FROM */
+        {.value = "t", .type = STRING},
+        {.value = "WHERE", .type = WHERE},
+        {.value = "=", .type = EQUALS}, /* missing lhs */
+        {.value = "1", .type = NUMBER},
+        {.value = ";", .type = SEMICOLON},
+    };
+    TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
+    ValidationError errs[16];
+    ValidationResult res = {.errors = errs, .error_capacity = 16};
+    bool ok = validate_query_with_errors(&s, &res);
+    expect_true(&failures,
+                !ok,
+                __FILE__,
+                __LINE__,
+                "query with multiple issues should fail");
+    expect_true(&failures,
+                res.error_count >= 3,
+                __FILE__,
+                __LINE__,
+                "multiple errors should be accumulated");
 }
 
 int main(void)
@@ -94,6 +136,7 @@ int main(void)
     test_valid_where_and_or();
     test_invalid_missing_from();
     test_invalid_trailing_after_semicolon();
+    test_accumulates_multiple_errors();
 
     if (failures == 0)
         return 0;

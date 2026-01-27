@@ -25,3 +25,17 @@ test(
   'sqlstringlist',
   test_sqlstringlist_exe,
 )
+
+test_sqlvalidate_exe = executable(
+  'test_sqlvalidate',
+  files(
+    'test_sqlvalidate.c',
+    '../src/sql-validate.c',
+  ),
+  include_directories : inc,
+)
+
+test(
+  'sqlvalidate',
+  test_sqlvalidate_exe,
+)

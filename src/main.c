@@ -51,6 +51,8 @@ void arena_free(Arena* arena)
  */
 int main(int argc, char* argv[])
 {
+    (void)argc;
+    (void)argv;
     // if (argc != 2)
     // {
     //     printf("Usage: %s <SQL-String>\n", argv[0]);

@@ -1,6 +1,7 @@
 srcs = files(
   'main.c',
-  'sqlstring.c'
+  'sqlstring.c',
+  'sql-validate.c',
 )
 
 inc = include_directories('.')

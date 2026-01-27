@@ -112,50 +112,49 @@ static bool token_is_valid_lexeme(const Token *t)
  */
 static bool accept(parser_t *p, const Token *tok, bool is_eof)
 {
+    /* If this is EOF, only accept when we're in the terminal state */
+    if (is_eof)
+        return p->expected == EXP_END;
+
     switch (p->expected)
     {
     case EXP_SELECT:
-        if (!is_eof && token_is_select(tok)) { p->expected = EXP_SELECT_ITEM; return true; }
+        if (token_is_select(tok)) { p->expected = EXP_SELECT_ITEM; return true; }
         return false;
 
     case EXP_SELECT_ITEM:
-        if (!is_eof && (token_is_identifier(tok) || token_is_star(tok)))
-        { p->expected = EXP_SELECT_CONT; return true; }
+        if (token_is_identifier(tok) || token_is_star(tok)) { p->expected = EXP_SELECT_CONT; return true; }
         return false;
 
     case EXP_SELECT_CONT:
-        if (!is_eof && token_is_comma(tok)) { p->expected = EXP_SELECT_ITEM; return true; }
-        if (!is_eof && token_is_from(tok))  { p->expected = EXP_TABLE; return true; }
+        if (token_is_comma(tok)) { p->expected = EXP_SELECT_ITEM; return true; }
+        if (token_is_from(tok))  { p->expected = EXP_TABLE; return true; }
         return false;
 
     case EXP_TABLE:
-        if (!is_eof && token_is_identifier(tok)) { p->expected = EXP_WHERE_OR_END; return true; }
+        if (token_is_identifier(tok)) { p->expected = EXP_WHERE_OR_END; return true; }
         return false;
 
     case EXP_WHERE_OR_END:
-        if (!is_eof && token_is_where(tok))     { p->expected = EXP_CONDITION_LHS; return true; }
-        if (!is_eof && token_is_semicolon(tok)) { p->expected = EXP_END; return true; }
+        if (token_is_where(tok))     { p->expected = EXP_CONDITION_LHS; return true; }
+        if (token_is_semicolon(tok)) { p->expected = EXP_END; return true; }
         return false;
 
     case EXP_CONDITION_LHS:
-        if (!is_eof && token_is_identifier(tok)) { p->expected = EXP_CONDITION_OP; return true; }
+        if (token_is_identifier(tok)) { p->expected = EXP_CONDITION_OP; return true; }
         return false;
 
     case EXP_CONDITION_OP:
-        if (!is_eof && token_is_equals(tok)) { p->expected = EXP_CONDITION_RHS; return true; }
+        if (token_is_equals(tok)) { p->expected = EXP_CONDITION_RHS; return true; }
         return false;
 
     case EXP_CONDITION_RHS:
-        if (!is_eof && token_is_literal(tok)) { p->expected = EXP_CONDITION_CONT; return true; }
+        if (token_is_literal(tok)) { p->expected = EXP_CONDITION_CONT; return true; }
         return false;
 
     case EXP_CONDITION_CONT:
-        if (!is_eof && (token_is_and(tok) || token_is_or(tok))) { p->expected = EXP_CONDITION_LHS; return true; }
-        if (!is_eof && token_is_semicolon(tok))                 { p->expected = EXP_END; return true; }
-        return false;
-
-    case EXP_END:
-        if (is_eof) return true;
+        if (token_is_and(tok) || token_is_or(tok)) { p->expected = EXP_CONDITION_LHS; return true; }
+        if (token_is_semicolon(tok))               { p->expected = EXP_END; return true; }
         return false;
 
     default:

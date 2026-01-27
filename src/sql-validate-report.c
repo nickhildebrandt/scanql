@@ -11,6 +11,9 @@
 #define CLR_DIM   "\033[90m"
 #define CLR_RESET "\033[0m"
 
+/**
+ * expected_to_str - Convert expected state to string label
+ */
 static const char* expected_to_str(SqlTokenExpected e)
 {
     switch (e)
@@ -29,6 +32,9 @@ static const char* expected_to_str(SqlTokenExpected e)
     }
 }
 
+/**
+ * symbol_to_str - Convert lexer symbol to human-readable label
+ */
 static const char* symbol_to_str(SqlSymbols s)
 {
     switch (s)
@@ -65,6 +71,12 @@ static const char* symbol_to_str(SqlSymbols s)
     }
 }
 
+/**
+ * describe_token - Render a token into a small textual description
+ * @e: validation error holding the token
+ * @buf: output buffer
+ * @n: buffer size
+ */
 static void describe_token(const ValidationError* e, char* buf, size_t n)
 {
     if (!e || !buf || n == 0)
@@ -86,6 +98,10 @@ static void describe_token(const ValidationError* e, char* buf, size_t n)
         snprintf(buf, n, "%s", kind);
 }
 
+/**
+ * print_validation_result - Pretty-print validation outcome with ANSI colors
+ * @result: validation result to print (must not be NULL)
+ */
 void print_validation_result(const ValidationResult* result)
 {
     assert(result != NULL);

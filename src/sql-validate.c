@@ -11,20 +11,36 @@ typedef struct {
     SqlTokenExpected expected;
 } parser_t;
 /* Helpers to interpret existing Token/SqlSymbols into semantic roles */
+/**
+ * token_is_select - Check if token is SELECT keyword
+ */
 static bool token_is_select(const Token *t)     { return t && t->type == SELECT; }
+/** token_is_from - Check if token is FROM keyword */
 static bool token_is_from(const Token *t)       { return t && t->type == FROM; }
+/** token_is_where - Check if token is WHERE keyword */
 static bool token_is_where(const Token *t)      { return t && t->type == WHERE; }
+/** token_is_comma - Check if token is comma */
 static bool token_is_comma(const Token *t)      { return t && t->type == COMMA; }
+/** token_is_equals - Check if token is equals sign */
 static bool token_is_equals(const Token *t)     { return t && t->type == EQUALS; }
+/** token_is_and - Check if token is AND */
 static bool token_is_and(const Token *t)        { return t && t->type == AND; }
+/** token_is_or - Check if token is OR */
 static bool token_is_or(const Token *t)         { return t && t->type == OR; }
+/** token_is_semicolon - Check if token is semicolon */
 static bool token_is_semicolon(const Token *t)  { return t && t->type == SEMICOLON; }
 
+/**
+ * token_is_star - Check if token lexeme is '*'
+ */
 static bool token_is_star(const Token *t)
 {
     return t && t->type == STRING && t->value && t->value[0] == '*' && t->value[1] == '\0';
 }
 
+/**
+ * token_is_literal - Check if token represents a literal value
+ */
 static bool token_is_literal(const Token *t)
 {
     if (!t)
@@ -42,6 +58,9 @@ static bool token_is_literal(const Token *t)
     return false;
 }
 
+/**
+ * token_is_identifier - Check if token represents an identifier
+ */
 static bool token_is_identifier(const Token *t)
 {
     if (!t)
@@ -58,6 +77,9 @@ static bool token_is_identifier(const Token *t)
     return true;
 }
 
+/**
+ * token_is_valid_lexeme - Filter out tokens we do not handle in validator
+ */
 static bool token_is_valid_lexeme(const Token *t)
 {
     if (!t)
@@ -80,7 +102,14 @@ static bool token_is_valid_lexeme(const Token *t)
     }
 }
 
-/* accept: core state machine using existing Token/SqlSymbols. */
+/**
+ * accept - Core deterministic state transition
+ * @p: parser state holder
+ * @tok: current token (NULL when is_eof is true)
+ * @is_eof: true when tok is EOF sentinel
+ *
+ * Returns: true when transition is valid and state is advanced; false otherwise.
+ */
 static bool accept(parser_t *p, const Token *tok, bool is_eof)
 {
     switch (p->expected)
@@ -134,6 +163,14 @@ static bool accept(parser_t *p, const Token *tok, bool is_eof)
     }
 }
 
+/**
+ * record_error - Append an error into the result buffer if space remains
+ * @r: validation result accumulator
+ * @tok: offending token (NULL for EOF)
+ * @pos: token index
+ * @expected: expected parser state
+ * @msg: short diagnostic string (must outlive the result)
+ */
 static void record_error(ValidationResult* r,
                          const Token* tok,
                          int pos,
@@ -153,6 +190,13 @@ static void record_error(ValidationResult* r,
     r->error_count++;
 }
 
+/**
+ * validate_query_with_errors - Validate and collect all errors
+ * @tokens: token stack to validate
+ * @result: output accumulator (caller provides storage)
+ *
+ * Returns: true if no errors, false otherwise. Continues after mismatches.
+ */
 bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* result)
 {
     assert(tokens != NULL);
@@ -190,6 +234,12 @@ bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* resu
     return result->ok;
 }
 
+/**
+ * validate_query - Convenience wrapper that only reports success/failure
+ * @tokens: token stack to validate
+ *
+ * Returns: true if query is valid, false otherwise.
+ */
 bool validate_query(const TokenStack *tokens)
 {
     if (!tokens)

@@ -145,8 +145,6 @@ static void test_null_list_is_safe(void)
 
 /**
  * main - Run all unit tests for SqlStringList
- *
- * Return: 0 if all tests passed, non-zero otherwise
  */
 int main(void)
 {

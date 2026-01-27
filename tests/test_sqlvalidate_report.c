@@ -7,6 +7,9 @@
 
 static int failures = 0;
 
+/**
+ * make_stack - helper to wrap a Token array into a TokenStack view
+ */
 static TokenStack make_stack(Token* toks, int len)
 {
     TokenStack s = {.elems = toks, .len = len, .cap = len};
@@ -35,6 +38,9 @@ static void test_report_formats_errors(void)
     print_validation_result(&res);
 }
 
+/**
+ * main - Run all unit tests for SqlValidateReport
+ */
 int main(void)
 {
     test_report_formats_errors();

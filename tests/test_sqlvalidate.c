@@ -4,12 +4,22 @@
 
 static int failures = 0;
 
+/**
+ * make_stack - Helper to wrap a Token array into a TokenStack view
+ * @toks: token array
+ * @len: number of tokens
+ *
+ * Return: TokenStack view over the provided array
+ */
 static TokenStack make_stack(Token* toks, int len)
 {
     TokenStack s = {.elems = toks, .len = len, .cap = len};
     return s;
 }
 
+/**
+ * test_valid_simple_select_star - Validate SELECT *,identifier FROM
+ */
 static void test_valid_simple_select_star(void)
 {
     Token toks[] = {
@@ -29,6 +39,9 @@ static void test_valid_simple_select_star(void)
                 "SELECT *,a FROM t; is valid");
 }
 
+/**
+ * test_valid_where_and_or - Validate WHERE with AND/OR chain
+ */
 static void test_valid_where_and_or(void)
 {
     Token toks[] = {
@@ -54,6 +67,9 @@ static void test_valid_where_and_or(void)
                 "SELECT ... WHERE ... AND ...; is valid");
 }
 
+/**
+ * test_invalid_missing_from - Ensure missing FROM is rejected
+ */
 static void test_invalid_missing_from(void)
 {
     Token toks[] = {
@@ -77,6 +93,9 @@ static void test_invalid_missing_from(void)
                 "error count recorded");
 }
 
+/**
+ * test_invalid_trailing_after_semicolon - Ensure trailing tokens after ';' fail
+ */
 static void test_invalid_trailing_after_semicolon(void)
 {
     Token toks[] = {
@@ -102,6 +121,9 @@ static void test_invalid_trailing_after_semicolon(void)
                 "error count recorded");
 }
 
+/**
+ * test_accumulates_multiple_errors - Ensure multiple mismatches are collected
+ */
 static void test_accumulates_multiple_errors(void)
 {
     Token toks[] = {
@@ -130,6 +152,9 @@ static void test_accumulates_multiple_errors(void)
                 "multiple errors should be accumulated");
 }
 
+/**
+ * main - Run all unit tests for SqlValidate
+ */
 int main(void)
 {
     test_valid_simple_select_star();

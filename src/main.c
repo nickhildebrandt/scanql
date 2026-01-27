@@ -17,6 +17,12 @@ typedef struct
     size_t capacity;
 } Arena;
 
+/**
+ * init_static_arena - Allocate a simple bump arena of given capacity
+ * @capacity: number of bytes to reserve
+ *
+ * Return: initialized Arena with allocated buffer
+ */
 Arena init_static_arena(size_t capacity)
 {
     u8* data = malloc(capacity);
@@ -24,6 +30,13 @@ Arena init_static_arena(size_t capacity)
     return a;
 }
 
+/**
+ * static_arena_alloc - Allocate a slice from the arena without freeing
+ * @arena: arena to allocate from
+ * @size: bytes requested
+ *
+ * Return: pointer to allocated slice or NULL if insufficient space
+ */
 void* static_arena_alloc(Arena* arena, size_t size)
 {
     if (arena->size + size < arena->capacity)
@@ -35,6 +48,10 @@ void* static_arena_alloc(Arena* arena, size_t size)
     return NULL;
 }
 
+/**
+ * arena_free - Release arena backing memory
+ * @arena: arena to free
+ */
 void arena_free(Arena* arena)
 {
     free(arena->data);

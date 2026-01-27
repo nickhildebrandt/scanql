@@ -8,9 +8,7 @@
 static int failures = 0;
 
 /**
- * test_new_and_length_and_get_char - Test creation, length and indexing
- *
- * Return: Nothing
+ * test_new_and_length_and_get_char - Validate creation, length, and indexing
  */
 static void test_new_and_length_and_get_char(void)
 {
@@ -64,9 +62,7 @@ static void test_new_and_length_and_get_char(void)
 }
 
 /**
- * test_append_and_length - Test appending nodes and indexing across nodes
- *
- * Return: Nothing
+ * test_append_and_length - Validate append and total length calculation
  */
 static void test_append_and_length(void)
 {
@@ -115,9 +111,7 @@ static void test_append_and_length(void)
 }
 
 /**
- * test_nocopy_append_does_not_crash - Test nocopy mode and append behavior
- *
- * Return: Nothing
+ * test_nocopy_append_does_not_crash - Ensure nocopy strings remain valid
  */
 static void test_nocopy_append_does_not_crash(void)
 {
@@ -187,8 +181,6 @@ static void test_nocopy_append_does_not_crash(void)
 
 /**
  * main - Run all unit tests for SqlString
- *
- * Return: 0 if all tests passed, non-zero otherwise
  */
 int main(void)
 {

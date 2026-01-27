@@ -3,14 +3,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-/*
- * Small assertion helpers for unit tests.
- *
- * Usage pattern:
- *   static int failures = 0;
- *   expect_true(&failures, cond, __FILE__, __LINE__, "...");
- */
-
 /**
  * expect_true - Assert a boolean condition
  * @failures: Pointer to failure counter to increment on failure

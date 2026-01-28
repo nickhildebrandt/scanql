@@ -1,10 +1,9 @@
-#include "tokenizer.h"
-
 #include "sql-symbols.h"
-#include "sql-token.h"
 #include "sql-token-stack.h"
+#include "sql-token.h"
 #include "sql-validate-report.h"
 #include "sql-validate.h"
+#include "tokenizer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,16 +27,16 @@ int main(int argc, char* argv[])
     const char* sql = argv[1];
     size_t txt_len  = strlen(sql);
 
-    Arena arena = init_static_arena(2 * txt_len + 16);
+    Arena arena = init_static_arena(2 * txt_len + 16 + txt_len * sizeof(Token));
     TokenStack tokenList = get_tokens(sql, &arena);
 
     /* Validate produced tokens */
     ValidationError errs[tokenList.len + 2];
     ValidationResult res = {
-        .ok = true,
-        .error_count = 0,
+        .ok             = true,
+        .error_count    = 0,
         .error_capacity = sizeof(errs) / sizeof(errs[0]),
-        .errors = errs,
+        .errors         = errs,
     };
 
     bool ok = validate_query_with_errors(&tokenList, &res);
@@ -52,7 +51,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    free(tokenList.elems);
     arena_free(&arena);
 
     /* For CLI tests we only print diagnostics; always succeed exit code */

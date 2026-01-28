@@ -13,7 +13,7 @@
 Arena init_static_arena(size_t capacity)
 {
     unsigned char* data = malloc(capacity);
-    Arena a  = {.data = data, .size = 0, .capacity = capacity};
+    Arena a             = {.data = data, .size = 0, .capacity = capacity};
     return a;
 }
 
@@ -69,7 +69,7 @@ TokenStack get_tokens(const char* sql, Arena* arena)
     size_t tokenCount = txt_len ? txt_len : 1;
 
     TokenStack tokenList = {
-        .elems = malloc(tokenCount * sizeof(Token)),
+        .elems = (Token*)static_arena_alloc(arena, tokenCount * sizeof(Token)),
         .len   = 0,
         .cap   = (int)tokenCount,
     };
@@ -83,70 +83,74 @@ TokenStack get_tokens(const char* sql, Arena* arena)
 
         switch (c)
         {
-        case ' ': /* skip whitespace */
-            index++;
-            continue;
-        case 'S':
-        case 's':
-            token.type = (index == 0) ? SELECT : STRING;
-            break;
-        case ',':
-            token.type  = COMMA;
-            token.value = static_arena_alloc(arena, 2);
-            token.value = ",\0";
-            append(&tokenList, token);
-            index++;
-            continue;
-        case 'f':
-        case 'F':
-            if ((index + 1 < last_index) && (sql[index + 1] == 'r' || sql[index + 1] == 'R'))
-                token.type = FROM;
-            else
-                token.type = STRING;
-            break;
-        case '=':
-            token.type = EQUALS;
-            break;
-        case '!':
-            token.type = NEGATION;
-            break;
-        case ';':
-            token.type  = SEMICOLON;
-            token.value = static_arena_alloc(arena, 2);
-            token.value = ";\0";
-            append(&tokenList, token);
-            index++;
-            continue;
-        case '"':
-        case '\'':
-        {
-            token.type = STRING;
-            char separator = c;
-
-            int start = index;
-            index++; /* skip opening quote */
-            c = sql[index];
-
-            while (index < last_index && c != separator)
-            {
+            case ' ': /* skip whitespace */
                 index++;
-                c = sql[index];
-            }
-            if (index < last_index)
-                index++; /* consume closing quote */
+                continue;
+            case 'S':
+            case 's':
+                token.type = (index == 0) ? SELECT : STRING;
+                break;
+            case ',':
+                token.type     = COMMA;
+                token.value    = static_arena_alloc(arena, 2);
+                token.value[0] = ',';
+                token.value[1] = '\0';
+                append(&tokenList, token);
+                index++;
+                continue;
+            case 'f':
+            case 'F':
+                if ((index + 1 < last_index) &&
+                    (sql[index + 1] == 'r' || sql[index + 1] == 'R'))
+                    token.type = FROM;
+                else
+                    token.type = STRING;
+                break;
+            case '=':
+                token.type = EQUALS;
+                break;
+            case '!':
+                token.type = NEGATION;
+                break;
+            case ';':
+                token.type     = SEMICOLON;
+                token.value    = static_arena_alloc(arena, 2);
+                token.value[0] = ';';
+                token.value[1] = '\0';
+                append(&tokenList, token);
+                index++;
+                continue;
+            case '"':
+            case '\'':
+                {
+                    token.type     = STRING;
+                    char separator = c;
 
-            int end = index;
-            assert(end > start && "end should be bigger than start");
+                    int start = index;
+                    index++; /* skip opening quote */
+                    c = sql[index];
 
-            token.value = static_arena_alloc(arena, (size_t)(end - start) + 1);
-            strncpy(token.value, sql + start, (size_t)(end - start));
-            token.value[end - start] = '\0';
-            append(&tokenList, token);
-            continue;
-        }
-        default:
-            token.type = STRING;
-            break;
+                    while (index < last_index && c != separator)
+                    {
+                        index++;
+                        c = sql[index];
+                    }
+                    if (index < last_index)
+                        index++; /* consume closing quote */
+
+                    int end = index;
+                    assert(end > start && "end should be bigger than start");
+
+                    token.value =
+                        static_arena_alloc(arena, (size_t)(end - start) + 1);
+                    strncpy(token.value, sql + start, (size_t)(end - start));
+                    token.value[end - start] = '\0';
+                    append(&tokenList, token);
+                    continue;
+                }
+            default:
+                token.type = STRING;
+                break;
         }
 
         int start = index;
@@ -156,7 +160,7 @@ TokenStack get_tokens(const char* sql, Arena* arena)
             index++;
         }
         int end = index;
-        assert(end >= start);
+        assert(end > start && "end should be bigger than start");
 
         token.value = static_arena_alloc(arena, (size_t)(end - start) + 1);
         strncpy(token.value, sql + start, (size_t)(end - start));

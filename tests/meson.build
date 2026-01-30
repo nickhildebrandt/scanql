@@ -2,7 +2,7 @@ inc = include_directories('../src')
 
 test_sqlstring_exe = executable(
   'test_sqlstring',
-  files('test_sqlstring.c', '../src/sqlstring.c'),
+  files('test_sqlstring.c', '../src/sql-string.c'),
   include_directories : inc,
 )
 
@@ -15,8 +15,8 @@ test_sqlstringlist_exe = executable(
   'test_sqlstringlist',
   files(
     'test_sqlstringlist.c',
-    '../src/sqlstring.c',
-    '../src/sqlstringlist.c',
+    '../src/sql-string.c',
+    '../src/sql-string-list.c',
   ),
   include_directories : inc,
 )

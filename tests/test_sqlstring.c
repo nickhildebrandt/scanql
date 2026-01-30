@@ -1,4 +1,4 @@
-#include "sqlstring.h"
+#include "sql-string.h"
 #include "test_asserts.h"
 
 #include <stdio.h>

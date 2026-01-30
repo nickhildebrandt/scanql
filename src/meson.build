@@ -1,7 +1,8 @@
 srcs = files(
   'main.c',
   'tokenizer.c',
-  'sqlstring.c',
+  'sql-string.c',
+  'sql-string-list.c',
   'sql-validate.c',
   'sql-validate-report.c',
   'sql-token.c',

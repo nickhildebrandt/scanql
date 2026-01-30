@@ -71,3 +71,17 @@ test(
   'tokenizer',
   test_tokenizer_exe,
 )
+
+test_sqltoken_stack_exe = executable(
+  'test_sqltoken_stack',
+  files(
+    'test_sqltoken_stack.c',
+    '../src/sql-token-stack.c',
+  ),
+  include_directories : inc,
+)
+
+test(
+  'sqltoken_stack',
+  test_sqltoken_stack_exe,
+)

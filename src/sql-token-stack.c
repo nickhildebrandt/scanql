@@ -9,7 +9,7 @@
  */
 void append(TokenStack* list, Token token)
 {
-    if (list->len <= list->cap)
+    if (list && list->elems && list->len < list->cap)
     {
         list->elems[list->len] = token;
         list->len += 1;

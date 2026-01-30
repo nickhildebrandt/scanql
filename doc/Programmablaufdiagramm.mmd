@@ -1,0 +1,44 @@
+flowchart TD
+
+  %% ===== Main =====
+  A([Start]) --> B[main.c: Read SQL file or STDIN]
+  B --> C[tokenizer.c: Start tokenization]
+
+  %% ===== Tokenizer =====
+  C --> D[Split SQL text into tokens]
+  D --> E[Assign token types from SqlSymbols]
+  E --> F[Create token list with type and value]
+  F --> G[Call validator API]
+
+  %% ===== Validator =====
+  G --> H[State machine expects SELECT collist FROM table optional WHERE]
+  H --> I{Syntax error or fatal state}
+
+  I -- No --> J[Iterate tokens and check expected types]
+  J --> K{Token matches expectation}
+
+  K -- Yes --> L[Continue with next token]
+  L --> I
+
+  K -- No --> M[record_error store expected got index fatal]
+  M --> N{Fatal flag true}
+
+  N -- Yes --> O[Stop validation immediately]
+  N -- No --> P[Continue and collect more errors]
+  P --> I
+
+  I -- Yes --> Q[Generate validation report]
+
+  %% ===== Report =====
+  Q --> R{Any errors recorded}
+  R -- No --> S[Print green validation ok]
+  R -- Yes --> T[Print first error message]
+  T --> U{More errors exist}
+  U -- Yes --> V[Print and N more errors]
+  U -- No --> W[No additional message]
+
+  %% ===== Exit =====
+  S --> X[Exit code currently always 0]
+  V --> X
+  W --> X
+  X --> Y([End])

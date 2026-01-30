@@ -113,47 +113,47 @@ static bool accept(parser_t *p, const Token *tok, bool is_eof)
 {
     /* If this is EOF, only accept when we're in the terminal state */
     if (is_eof)
-        return p->expected == EXP_END;
+    return p->expected == END;
 
     switch (p->expected)
     {
-    case EXP_SELECT:
-        if (token_is_select(tok)) { p->expected = EXP_SELECT_ITEM; return true; }
+    case SELECT:
+        if (token_is_select(tok)) { p->expected = SELECT_ITEM; return true; }
         return false;
 
-    case EXP_SELECT_ITEM:
-        if (token_is_identifier(tok) || token_is_star(tok)) { p->expected = EXP_SELECT_CONT; return true; }
+    case SELECT_ITEM:
+        if (token_is_identifier(tok) || token_is_star(tok)) { p->expected = SELECT_CONT; return true; }
         return false;
 
-    case EXP_SELECT_CONT:
-        if (token_is_comma(tok)) { p->expected = EXP_SELECT_ITEM; return true; }
-        if (token_is_from(tok))  { p->expected = EXP_TABLE; return true; }
+    case SELECT_CONT:
+        if (token_is_comma(tok)) { p->expected = SELECT_ITEM; return true; }
+        if (token_is_from(tok))  { p->expected = TABLE; return true; }
         return false;
 
-    case EXP_TABLE:
-        if (token_is_identifier(tok)) { p->expected = EXP_WHERE_OR_END; return true; }
+    case TABLE:
+        if (token_is_identifier(tok)) { p->expected = WHERE_OR_END; return true; }
         return false;
 
-    case EXP_WHERE_OR_END:
-        if (token_is_where(tok))     { p->expected = EXP_CONDITION_LHS; return true; }
-        if (token_is_semicolon(tok)) { p->expected = EXP_END; return true; }
+    case WHERE_OR_END:
+        if (token_is_where(tok))     { p->expected = CONDITION_LHS; return true; }
+        if (token_is_semicolon(tok)) { p->expected = END; return true; }
         return false;
 
-    case EXP_CONDITION_LHS:
-        if (token_is_identifier(tok)) { p->expected = EXP_CONDITION_OP; return true; }
+    case CONDITION_LHS:
+        if (token_is_identifier(tok)) { p->expected = CONDITION_OP; return true; }
         return false;
 
-    case EXP_CONDITION_OP:
-        if (token_is_equals(tok)) { p->expected = EXP_CONDITION_RHS; return true; }
+    case CONDITION_OP:
+        if (token_is_equals(tok)) { p->expected = CONDITION_RHS; return true; }
         return false;
 
-    case EXP_CONDITION_RHS:
-        if (token_is_literal(tok)) { p->expected = EXP_CONDITION_CONT; return true; }
+    case CONDITION_RHS:
+        if (token_is_literal(tok)) { p->expected = CONDITION_CONT; return true; }
         return false;
 
-    case EXP_CONDITION_CONT:
-        if (token_is_and(tok) || token_is_or(tok)) { p->expected = EXP_CONDITION_LHS; return true; }
-        if (token_is_semicolon(tok))               { p->expected = EXP_END; return true; }
+    case CONDITION_CONT:
+        if (token_is_and(tok) || token_is_or(tok)) { p->expected = CONDITION_LHS; return true; }
+        if (token_is_semicolon(tok))               { p->expected = END; return true; }
         return false;
 
     default:
@@ -203,11 +203,11 @@ bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* resu
     result->ok           = true;
     result->error_count  = 0;
 
-    parser_t p = {.expected = EXP_SELECT};
+    parser_t p = {.expected = SELECT};
     bool aborted = false;
     int abort_pos = -1;
     const Token* abort_token = NULL;
-    SqlSymbols abort_expected = EXP_END;
+    SqlSymbols abort_expected = END;
 
     /* iterate through tokens, treat array end as EOF */
     for (int i = 0; i <= tokens->len; ++i)
@@ -242,7 +242,7 @@ bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* resu
         return result->ok;
     }
 
-    if (p.expected != EXP_END)
+    if (p.expected != END)
     {
         record_error(result, NULL, tokens->len, p.expected, "incomplete query");
     }

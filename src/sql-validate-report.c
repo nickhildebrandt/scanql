@@ -18,16 +18,16 @@ static const char* expected_to_str(SqlSymbols e)
 {
     switch (e)
     {
-    case EXP_SELECT: return "SELECT";
-    case EXP_SELECT_ITEM: return "SELECT_ITEM";
-    case EXP_SELECT_CONT: return "SELECT_CONT";
-    case EXP_TABLE: return "TABLE";
-    case EXP_WHERE_OR_END: return "WHERE_OR_END";
-    case EXP_CONDITION_LHS: return "COND_LHS";
-    case EXP_CONDITION_OP: return "COND_OP";
-    case EXP_CONDITION_RHS: return "COND_RHS";
-    case EXP_CONDITION_CONT: return "COND_CONT";
-    case EXP_END: return "END";
+    case SELECT: return "SELECT";
+    case SELECT_ITEM: return "SELECT_ITEM";
+    case SELECT_CONT: return "SELECT_CONT";
+    case TABLE: return "TABLE";
+    case WHERE_OR_END: return "WHERE_OR_END";
+    case CONDITION_LHS: return "COND_LHS";
+    case CONDITION_OP: return "COND_OP";
+    case CONDITION_RHS: return "COND_RHS";
+    case CONDITION_CONT: return "COND_CONT";
+    case END: return "END";
     default: return "?";
     }
 }

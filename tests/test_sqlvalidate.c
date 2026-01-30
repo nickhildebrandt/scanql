@@ -1,10 +1,8 @@
 #include "sql-validate.h"
 #include "sql-token.h"
-#include "test_asserts.h"
 
+#include <assert.h>
 #include <string.h>
-
-static int failures = 0;
 
 /**
  * make_stack - Helper to wrap a Token array into a TokenStack view
@@ -34,11 +32,7 @@ static void test_valid_simple_select_star(void)
         {.value = ";", .type = SEMICOLON},
     };
     TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
-    expect_true(&failures,
-                validate_query(&s),
-                __FILE__,
-                __LINE__,
-                "SELECT *,a FROM t; is valid");
+    assert(validate_query(&s));
 }
 
 /**
@@ -62,11 +56,7 @@ static void test_valid_where_and_or(void)
         {.value = ";", .type = SEMICOLON},
     };
     TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
-    expect_true(&failures,
-                validate_query(&s),
-                __FILE__,
-                __LINE__,
-                "SELECT ... WHERE ... AND ...; is valid");
+    assert(validate_query(&s));
 }
 
 /**
@@ -83,16 +73,8 @@ static void test_invalid_missing_from(void)
     TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
     ValidationError errs[8];
     ValidationResult res = {.errors = errs, .error_capacity = 8};
-    expect_true(&failures,
-                !validate_query_with_errors(&s, &res),
-                __FILE__,
-                __LINE__,
-                "SELECT a t; should be invalid (missing FROM)");
-    expect_true(&failures,
-                res.error_count >= 1,
-                __FILE__,
-                __LINE__,
-                "error count recorded");
+    assert(!validate_query_with_errors(&s, &res));
+    assert(res.error_count >= 1);
 }
 
 /**
@@ -111,16 +93,8 @@ static void test_invalid_trailing_after_semicolon(void)
     TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
     ValidationError errs[8];
     ValidationResult res = {.errors = errs, .error_capacity = 8};
-    expect_true(&failures,
-                !validate_query_with_errors(&s, &res),
-                __FILE__,
-                __LINE__,
-                "Trailing tokens after ';' should be invalid");
-    expect_true(&failures,
-                res.error_count >= 1,
-                __FILE__,
-                __LINE__,
-                "error count recorded");
+    assert(!validate_query_with_errors(&s, &res));
+    assert(res.error_count >= 1);
 }
 
 /**
@@ -142,16 +116,8 @@ static void test_accumulates_multiple_errors(void)
     ValidationError errs[16];
     ValidationResult res = {.errors = errs, .error_capacity = 16};
     bool ok = validate_query_with_errors(&s, &res);
-    expect_true(&failures,
-                !ok,
-                __FILE__,
-                __LINE__,
-                "query with multiple issues should fail");
-    expect_true(&failures,
-                res.error_count >= 3,
-                __FILE__,
-                __LINE__,
-                "multiple errors should be accumulated");
+    assert(!ok);
+    assert(res.error_count >= 3);
 }
 
 /**
@@ -172,25 +138,12 @@ static void test_invalid_token_aborts_early(void)
     ValidationResult res = {.errors = errs, .error_capacity = 8};
     bool ok = validate_query_with_errors(&s, &res);
 
-    expect_true(&failures,
-                !ok,
-                __FILE__,
-                __LINE__,
-                "fatal invalid token should fail validation");
-    expect_eq_size_t(&failures,
-                     res.error_count,
-                     2,
-                     __FILE__,
-                     __LINE__,
-                     "validator should stop after fatal token and record abort");
+    assert(!ok);
+    assert(res.error_count == 2);
 
     /* Second error should describe the fatal stop */
-    expect_true(&failures,
-                res.errors[1].message &&
-                    strcmp(res.errors[1].message, "fatal: stopped parsing after invalid token") == 0,
-                __FILE__,
-                __LINE__,
-                "fatal stop message recorded");
+    assert(res.errors[1].message &&
+           strcmp(res.errors[1].message, "fatal: stopped parsing after invalid token") == 0);
 }
 
 /**
@@ -212,16 +165,8 @@ static void test_invalid_new_keyword_token(void)
     ValidationResult res = {.errors = errs, .error_capacity = 8};
     bool ok = validate_query_with_errors(&s, &res);
 
-    expect_true(&failures,
-                !ok,
-                __FILE__,
-                __LINE__,
-                "unsupported UPDATE statement should be rejected");
-    expect_true(&failures,
-                res.error_count >= 2,
-                __FILE__,
-                __LINE__,
-                "invalid token should record immediate error and fatal stop");
+    assert(!ok);
+    assert(res.error_count >= 2);
 }
 
 /**
@@ -236,10 +181,5 @@ int main(void)
     test_accumulates_multiple_errors();
     test_invalid_token_aborts_early();
     test_invalid_new_keyword_token();
-
-    if (failures == 0)
-        return 0;
-
-    fprintf(stderr, "%d test(s) failed\n", failures);
-    return 1;
+    return 0;
 }

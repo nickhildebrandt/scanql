@@ -5,7 +5,6 @@
 
 #include "sql-token.h"
 #include "sql-token-stack.h"
-#include "sql-token-expected.h"
 
 /**
  * struct ValidationError - A single validation error detail
@@ -17,7 +16,7 @@
 typedef struct {
 	const Token* token;
 	int position;
-	SqlTokenExpected expected;
+	SqlSymbols expected;
 	const char* message;
 } ValidationError;
 

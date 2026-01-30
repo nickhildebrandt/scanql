@@ -14,7 +14,7 @@
 /**
  * expected_to_str - Convert expected state to string label
  */
-static const char* expected_to_str(SqlTokenExpected e)
+static const char* expected_to_str(SqlSymbols e)
 {
     switch (e)
     {

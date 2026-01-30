@@ -5,10 +5,9 @@
 #include <string.h>
 
 #include "sql-symbols.h"
-#include "sql-token-expected.h"
 
 typedef struct {
-    SqlTokenExpected expected;
+    SqlSymbols expected;
 } parser_t;
 /* Helpers to interpret existing Token/SqlSymbols into semantic roles */
 /**
@@ -173,7 +172,7 @@ static bool accept(parser_t *p, const Token *tok, bool is_eof)
 static void record_error(ValidationResult* r,
                          const Token* tok,
                          int pos,
-                         SqlTokenExpected expected,
+                         SqlSymbols expected,
                          const char* msg)
 {
     assert(r != NULL);
@@ -208,7 +207,7 @@ bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* resu
     bool aborted = false;
     int abort_pos = -1;
     const Token* abort_token = NULL;
-    SqlTokenExpected abort_expected = EXP_END;
+    SqlSymbols abort_expected = EXP_END;
 
     /* iterate through tokens, treat array end as EOF */
     for (int i = 0; i <= tokens->len; ++i)

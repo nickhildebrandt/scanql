@@ -38,12 +38,38 @@ static void test_report_formats_errors(void)
     print_validation_result(&res);
 }
 
+static void test_report_formats_new_symbols(void)
+{
+    /* Manually craft a result using newly added symbols to exercise symbol_to_str */
+    ValidationError errs[2];
+    errs[0].token    = &(Token){.value = "UPDATE", .type = UPDATE};
+    errs[0].position = 0;
+    errs[0].expected = SELECT_ITEM; /* arbitrary state */
+    errs[0].message  = "unexpected token";
+
+    errs[1].token    = &(Token){.value = "JOIN", .type = JOIN};
+    errs[1].position = 1;
+    errs[1].expected = CONDITION_LHS;
+    errs[1].message  = "unexpected token";
+
+    ValidationResult res = {
+        .ok = false,
+        .error_count = 2,
+        .error_capacity = 2,
+        .errors = errs,
+    };
+
+    /* Smoke-test that printer handles new enum entries without falling back to '?' */
+    print_validation_result(&res);
+}
+
 /**
  * main - Run all unit tests for SqlValidateReport
  */
 int main(void)
 {
     test_report_formats_errors();
+    test_report_formats_new_symbols();
 
     if (failures == 0)
         return 0;

@@ -194,6 +194,37 @@ static void test_invalid_token_aborts_early(void)
 }
 
 /**
+ * test_invalid_new_keyword_token - Newly added keyword should also be rejected by validator
+ */
+static void test_invalid_new_keyword_token(void)
+{
+    Token toks[] = {
+        {.value = "UPDATE", .type = UPDATE}, /* not supported by validator */
+        {.value = "t", .type = STRING},
+        {.value = "SET", .type = SET},
+        {.value = "a", .type = STRING},
+        {.value = "=", .type = EQUALS},
+        {.value = "1", .type = NUMBER},
+        {.value = ";", .type = SEMICOLON},
+    };
+    TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
+    ValidationError errs[8];
+    ValidationResult res = {.errors = errs, .error_capacity = 8};
+    bool ok = validate_query_with_errors(&s, &res);
+
+    expect_true(&failures,
+                !ok,
+                __FILE__,
+                __LINE__,
+                "unsupported UPDATE statement should be rejected");
+    expect_true(&failures,
+                res.error_count >= 2,
+                __FILE__,
+                __LINE__,
+                "invalid token should record immediate error and fatal stop");
+}
+
+/**
  * main - Run all unit tests for SqlValidate
  */
 int main(void)
@@ -204,6 +235,7 @@ int main(void)
     test_invalid_trailing_after_semicolon();
     test_accumulates_multiple_errors();
     test_invalid_token_aborts_early();
+    test_invalid_new_keyword_token();
 
     if (failures == 0)
         return 0;

@@ -8,6 +8,7 @@
 
 #define CLR_RED   "\033[31m"
 #define CLR_YEL   "\033[33m"
+#define CLR_GRN   "\033[32m"
 #define CLR_DIM   "\033[90m"
 #define CLR_RESET "\033[0m"
 
@@ -186,6 +187,21 @@ static void describe_token(const ValidationError* e, char* buf, size_t n)
         snprintf(buf, n, "%s", kind);
 }
 
+static void token_name(const ValidationError* e, char* buf, size_t n)
+{
+    if (!buf || n == 0)
+        return;
+
+    const Token* t = e ? e->token : NULL;
+    if (!t)
+    {
+        snprintf(buf, n, "<EOF>");
+        return;
+    }
+
+    snprintf(buf, n, "%s", symbol_to_str(t->type));
+}
+
 /**
  * print_validation_result - Pretty-print validation outcome with ANSI colors
  * @result: validation result to print (must not be NULL)
@@ -196,29 +212,26 @@ void print_validation_result(const ValidationResult* result)
 
     if (result->ok)
     {
-        printf(CLR_DIM "validation: ok" CLR_RESET "\n");
+        printf(CLR_GRN "validation: ok" CLR_RESET "\n");
         return;
     }
 
-    printf(CLR_RED "validation failed (%zu error%s)" CLR_RESET "\n",
-           result->error_count,
-           result->error_count == 1 ? "" : "s");
+    const ValidationError* e0 = &result->errors[0];
+    char tokbuf[128];
+    char namebuf[64];
+    describe_token(e0, tokbuf, sizeof(tokbuf));
+    token_name(e0, namebuf, sizeof(namebuf));
 
-    for (size_t i = 0; i < result->error_count; ++i)
-    {
-        const ValidationError* e = &result->errors[i < result->error_capacity ? i : result->error_capacity - 1];
-        char tokbuf[128];
-        describe_token(e, tokbuf, sizeof(tokbuf));
+    printf(CLR_RED "validation failed" CLR_RESET
+        " at token %s: expected %s, got %s%s%s",
+        namebuf,
+        expected_to_str(e0->expected),
+        CLR_YEL, tokbuf, CLR_RESET);
+    if (e0->message && e0->message[0])
+        printf(" (%s)", e0->message);
 
-        printf("  %s%-5s%s at token %d: expected %s, got %s%s%s (%s)\n",
-               CLR_RED, "error", CLR_RESET,
-               e->position,
-               expected_to_str(e->expected),
-               CLR_YEL, tokbuf, CLR_RESET,
-               e->message ? e->message : "");
+    if (result->error_count > 1)
+        printf(" [and %zu more]", result->error_count - 1);
 
-        /* Prevent out-of-bounds if errors overflowed capacity */
-        if (i >= result->error_capacity && result->error_capacity > 0)
-            break;
-    }
+    printf("\n");
 }

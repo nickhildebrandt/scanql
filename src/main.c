@@ -39,17 +39,8 @@ int main(int argc, char* argv[])
         .errors         = errs,
     };
 
-    bool ok = validate_query_with_errors(&tokenList, &res);
+    validate_query_with_errors(&tokenList, &res);
     print_validation_result(&res);
-
-    /* Debug-print tokens when validation fails */
-    if (!ok)
-    {
-        for (int i = 0; i < tokenList.len; i++)
-        {
-            print_token(tokenList.elems[i]);
-        }
-    }
 
     arena_free(&arena);
 

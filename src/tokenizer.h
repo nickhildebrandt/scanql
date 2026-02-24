@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include <stddef.h>
-
-#include "sql-token.h"
 #include "sql-token-stack.h"
+#include "sql-token.h"
+
+#include <stddef.h>
 
 /**
  * struct Arena - Simple bump allocator used by the tokenizer
@@ -16,7 +16,8 @@
  * @size: bytes currently used
  * @capacity: total bytes available
  */
-typedef struct {
+typedef struct
+{
     unsigned char* data;
     size_t size;
     size_t capacity;

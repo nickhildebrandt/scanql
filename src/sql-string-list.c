@@ -1,4 +1,5 @@
 #include "sql-string-list.h"
+
 #include "sql-string.h"
 
 #include <stdlib.h>
@@ -60,7 +61,7 @@ SqlString* sql_string_list_get(SqlStringList* list, int index)
     if (!list || index < 0)
         return NULL;
 
-    int i = 0;
+    int i                  = 0;
     SqlStringList* current = list;
     while (current)
     {

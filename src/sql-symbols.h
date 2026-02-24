@@ -136,7 +136,8 @@ typedef enum : unsigned short
     MULTILINE_COMMENT_OPEN,
     MULTILINE_COMMENT_CLOSE,
 
-    // Parser expectation states (shared enum, reusing existing names when possible)
+    // Parser expectation states (shared enum, reusing existing names when
+    // possible)
     SELECT_ITEM,    // column | *
     SELECT_CONT,    // , | FROM
     WHERE_OR_END,   // WHERE | ;

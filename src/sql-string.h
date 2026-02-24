@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 /* Opaque structure representing a SQL string */
 typedef struct SqlString SqlString;

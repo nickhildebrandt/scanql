@@ -1,5 +1,5 @@
-#include "sql-validate.h"
 #include "sql-token.h"
+#include "sql-validate.h"
 
 #include <assert.h>
 #include <string.h>
@@ -115,7 +115,7 @@ static void test_accumulates_multiple_errors(void)
     TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
     ValidationError errs[16];
     ValidationResult res = {.errors = errs, .error_capacity = 16};
-    bool ok = validate_query_with_errors(&s, &res);
+    bool ok              = validate_query_with_errors(&s, &res);
     assert(!ok);
     assert(res.error_count >= 3);
 }
@@ -136,18 +136,20 @@ static void test_invalid_token_aborts_early(void)
     TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
     ValidationError errs[8];
     ValidationResult res = {.errors = errs, .error_capacity = 8};
-    bool ok = validate_query_with_errors(&s, &res);
+    bool ok              = validate_query_with_errors(&s, &res);
 
     assert(!ok);
     assert(res.error_count == 2);
 
     /* Second error should describe the fatal stop */
-    assert(res.errors[1].message &&
-           strcmp(res.errors[1].message, "fatal: stopped parsing after invalid token") == 0);
+    assert(res.errors[1].message && strcmp(res.errors[1].message,
+                                           "fatal: stopped parsing after "
+                                           "invalid token") == 0);
 }
 
 /**
- * test_invalid_new_keyword_token - Newly added keyword should also be rejected by validator
+ * test_invalid_new_keyword_token - Newly added keyword should also be rejected
+ * by validator
  */
 static void test_invalid_new_keyword_token(void)
 {
@@ -163,7 +165,7 @@ static void test_invalid_new_keyword_token(void)
     TokenStack s = make_stack(toks, (int)(sizeof(toks) / sizeof(toks[0])));
     ValidationError errs[8];
     ValidationResult res = {.errors = errs, .error_capacity = 8};
-    bool ok = validate_query_with_errors(&s, &res);
+    bool ok              = validate_query_with_errors(&s, &res);
 
     assert(!ok);
     assert(res.error_count >= 2);

@@ -1,46 +1,72 @@
 #include "sql-validate.h"
 
+#include "sql-symbols.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "sql-symbols.h"
-
-typedef struct {
+typedef struct
+{
     SqlSymbols expected;
 } parser_t;
 /* Helpers to interpret existing Token/SqlSymbols into semantic roles */
 /**
  * token_is_select - Check if token is SELECT keyword
  */
-static bool token_is_select(const Token *t)     { return t && t->type == SELECT; }
+static bool token_is_select(const Token* t)
+{
+    return t && t->type == SELECT;
+}
 /** token_is_from - Check if token is FROM keyword */
-static bool token_is_from(const Token *t)       { return t && t->type == FROM; }
+static bool token_is_from(const Token* t)
+{
+    return t && t->type == FROM;
+}
 /** token_is_where - Check if token is WHERE keyword */
-static bool token_is_where(const Token *t)      { return t && t->type == WHERE; }
+static bool token_is_where(const Token* t)
+{
+    return t && t->type == WHERE;
+}
 /** token_is_comma - Check if token is comma */
-static bool token_is_comma(const Token *t)      { return t && t->type == COMMA; }
+static bool token_is_comma(const Token* t)
+{
+    return t && t->type == COMMA;
+}
 /** token_is_equals - Check if token is equals sign */
-static bool token_is_equals(const Token *t)     { return t && t->type == EQUALS; }
+static bool token_is_equals(const Token* t)
+{
+    return t && t->type == EQUALS;
+}
 /** token_is_and - Check if token is AND */
-static bool token_is_and(const Token *t)        { return t && t->type == AND; }
+static bool token_is_and(const Token* t)
+{
+    return t && t->type == AND;
+}
 /** token_is_or - Check if token is OR */
-static bool token_is_or(const Token *t)         { return t && t->type == OR; }
+static bool token_is_or(const Token* t)
+{
+    return t && t->type == OR;
+}
 /** token_is_semicolon - Check if token is semicolon */
-static bool token_is_semicolon(const Token *t)  { return t && t->type == SEMICOLON; }
+static bool token_is_semicolon(const Token* t)
+{
+    return t && t->type == SEMICOLON;
+}
 
 /**
  * token_is_star - Check if token lexeme is '*'
  */
-static bool token_is_star(const Token *t)
+static bool token_is_star(const Token* t)
 {
-    return t && t->type == STRING && t->value && t->value[0] == '*' && t->value[1] == '\0';
+    return t && t->type == STRING && t->value && t->value[0] == '*' &&
+           t->value[1] == '\0';
 }
 
 /**
  * token_is_literal - Check if token represents a literal value
  */
-static bool token_is_literal(const Token *t)
+static bool token_is_literal(const Token* t)
 {
     if (!t)
         return false;
@@ -60,7 +86,7 @@ static bool token_is_literal(const Token *t)
 /**
  * token_is_identifier - Check if token represents an identifier
  */
-static bool token_is_identifier(const Token *t)
+static bool token_is_identifier(const Token* t)
 {
     if (!t)
         return false;
@@ -79,25 +105,25 @@ static bool token_is_identifier(const Token *t)
 /**
  * token_is_valid_lexeme - Filter out tokens we do not handle in validator
  */
-static bool token_is_valid_lexeme(const Token *t)
+static bool token_is_valid_lexeme(const Token* t)
 {
     if (!t)
         return false;
     switch (t->type)
     {
-    case SELECT:
-    case FROM:
-    case WHERE:
-    case COMMA:
-    case EQUALS:
-    case AND:
-    case OR:
-    case SEMICOLON:
-    case NUMBER:
-    case STRING:
-        return true;
-    default:
-        return false;
+        case SELECT:
+        case FROM:
+        case WHERE:
+        case COMMA:
+        case EQUALS:
+        case AND:
+        case OR:
+        case SEMICOLON:
+        case NUMBER:
+        case STRING:
+            return true;
+        default:
+            return false;
     }
 }
 
@@ -107,57 +133,106 @@ static bool token_is_valid_lexeme(const Token *t)
  * @tok: current token (NULL when is_eof is true)
  * @is_eof: true when tok is EOF sentinel
  *
- * Returns: true when transition is valid and state is advanced; false otherwise.
+ * Returns: true when transition is valid and state is advanced; false
+ * otherwise.
  */
-static bool accept(parser_t *p, const Token *tok, bool is_eof)
+static bool accept(parser_t* p, const Token* tok, bool is_eof)
 {
     /* If this is EOF, only accept when we're in the terminal state */
     if (is_eof)
-    return p->expected == END;
+        return p->expected == END;
 
     switch (p->expected)
     {
-    case SELECT:
-        if (token_is_select(tok)) { p->expected = SELECT_ITEM; return true; }
-        return false;
+        case SELECT:
+            if (token_is_select(tok))
+            {
+                p->expected = SELECT_ITEM;
+                return true;
+            }
+            return false;
 
-    case SELECT_ITEM:
-        if (token_is_identifier(tok) || token_is_star(tok)) { p->expected = SELECT_CONT; return true; }
-        return false;
+        case SELECT_ITEM:
+            if (token_is_identifier(tok) || token_is_star(tok))
+            {
+                p->expected = SELECT_CONT;
+                return true;
+            }
+            return false;
 
-    case SELECT_CONT:
-        if (token_is_comma(tok)) { p->expected = SELECT_ITEM; return true; }
-        if (token_is_from(tok))  { p->expected = TABLE; return true; }
-        return false;
+        case SELECT_CONT:
+            if (token_is_comma(tok))
+            {
+                p->expected = SELECT_ITEM;
+                return true;
+            }
+            if (token_is_from(tok))
+            {
+                p->expected = TABLE;
+                return true;
+            }
+            return false;
 
-    case TABLE:
-        if (token_is_identifier(tok)) { p->expected = WHERE_OR_END; return true; }
-        return false;
+        case TABLE:
+            if (token_is_identifier(tok))
+            {
+                p->expected = WHERE_OR_END;
+                return true;
+            }
+            return false;
 
-    case WHERE_OR_END:
-        if (token_is_where(tok))     { p->expected = CONDITION_LHS; return true; }
-        if (token_is_semicolon(tok)) { p->expected = END; return true; }
-        return false;
+        case WHERE_OR_END:
+            if (token_is_where(tok))
+            {
+                p->expected = CONDITION_LHS;
+                return true;
+            }
+            if (token_is_semicolon(tok))
+            {
+                p->expected = END;
+                return true;
+            }
+            return false;
 
-    case CONDITION_LHS:
-        if (token_is_identifier(tok)) { p->expected = CONDITION_OP; return true; }
-        return false;
+        case CONDITION_LHS:
+            if (token_is_identifier(tok))
+            {
+                p->expected = CONDITION_OP;
+                return true;
+            }
+            return false;
 
-    case CONDITION_OP:
-        if (token_is_equals(tok)) { p->expected = CONDITION_RHS; return true; }
-        return false;
+        case CONDITION_OP:
+            if (token_is_equals(tok))
+            {
+                p->expected = CONDITION_RHS;
+                return true;
+            }
+            return false;
 
-    case CONDITION_RHS:
-        if (token_is_literal(tok)) { p->expected = CONDITION_CONT; return true; }
-        return false;
+        case CONDITION_RHS:
+            if (token_is_literal(tok))
+            {
+                p->expected = CONDITION_CONT;
+                return true;
+            }
+            return false;
 
-    case CONDITION_CONT:
-        if (token_is_and(tok) || token_is_or(tok)) { p->expected = CONDITION_LHS; return true; }
-        if (token_is_semicolon(tok))               { p->expected = END; return true; }
-        return false;
+        case CONDITION_CONT:
+            if (token_is_and(tok) || token_is_or(tok))
+            {
+                p->expected = CONDITION_LHS;
+                return true;
+            }
+            if (token_is_semicolon(tok))
+            {
+                p->expected = END;
+                return true;
+            }
+            return false;
 
-    default:
-        return false;
+        default:
+            return false;
     }
 }
 
@@ -180,10 +255,10 @@ static void record_error(ValidationResult* r,
     if (r->error_count < r->error_capacity)
     {
         ValidationError* e = &r->errors[r->error_count];
-        e->token          = tok;
-        e->position       = pos;
-        e->expected       = expected;
-        e->message        = msg;
+        e->token           = tok;
+        e->position        = pos;
+        e->expected        = expected;
+        e->message         = msg;
     }
     r->error_count++;
 }
@@ -195,25 +270,26 @@ static void record_error(ValidationResult* r,
  *
  * Returns: true if no errors, false otherwise. Continues after mismatches.
  */
-bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* result)
+bool validate_query_with_errors(const TokenStack* tokens,
+                                ValidationResult* result)
 {
     assert(tokens != NULL);
     assert(result != NULL);
 
-    result->ok           = true;
-    result->error_count  = 0;
+    result->ok          = true;
+    result->error_count = 0;
 
-    parser_t p = {.expected = SELECT};
-    bool aborted = false;
-    int abort_pos = -1;
-    const Token* abort_token = NULL;
+    parser_t p                = {.expected = SELECT};
+    bool aborted              = false;
+    int abort_pos             = -1;
+    const Token* abort_token  = NULL;
     SqlSymbols abort_expected = END;
 
     /* iterate through tokens, treat array end as EOF */
     for (int i = 0; i <= tokens->len; ++i)
     {
-        bool is_eof = (i == tokens->len);
-        const Token *t = is_eof ? NULL : &tokens->elems[i];
+        bool is_eof    = (i == tokens->len);
+        const Token* t = is_eof ? NULL : &tokens->elems[i];
 
         if (!is_eof && !token_is_valid_lexeme(t))
         {
@@ -256,17 +332,17 @@ bool validate_query_with_errors(const TokenStack* tokens, ValidationResult* resu
  *
  * Returns: true if query is valid, false otherwise.
  */
-bool validate_query(const TokenStack *tokens)
+bool validate_query(const TokenStack* tokens)
 {
     if (!tokens)
         return false;
 
     ValidationError buf[tokens->len + 2];
     ValidationResult res = {
-        .ok = true,
-        .error_count = 0,
+        .ok             = true,
+        .error_count    = 0,
         .error_capacity = sizeof(buf) / sizeof(buf[0]),
-        .errors = buf,
+        .errors         = buf,
     };
 
     return validate_query_with_errors(tokens, &res);

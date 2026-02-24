@@ -1,6 +1,6 @@
-#include "sql-validate.h"
-#include "sql-validate-report.h"
 #include "sql-token.h"
+#include "sql-validate-report.h"
+#include "sql-validate.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -27,7 +27,7 @@ static void test_report_formats_errors(void)
 
     ValidationError errs[8];
     ValidationResult res = {.errors = errs, .error_capacity = 8};
-    bool ok = validate_query_with_errors(&s, &res);
+    bool ok              = validate_query_with_errors(&s, &res);
 
     assert(!ok);
     assert(res.error_count >= 1);
@@ -38,7 +38,8 @@ static void test_report_formats_errors(void)
 
 static void test_report_formats_new_symbols(void)
 {
-    /* Manually craft a result using newly added symbols to exercise symbol_to_str */
+    /* Manually craft a result using newly added symbols to exercise
+     * symbol_to_str */
     ValidationError errs[2];
     errs[0].token    = &(Token){.value = "UPDATE", .type = UPDATE};
     errs[0].position = 0;
@@ -51,13 +52,14 @@ static void test_report_formats_new_symbols(void)
     errs[1].message  = "unexpected token";
 
     ValidationResult res = {
-        .ok = false,
-        .error_count = 2,
+        .ok             = false,
+        .error_count    = 2,
         .error_capacity = 2,
-        .errors = errs,
+        .errors         = errs,
     };
 
-    /* Smoke-test that printer handles new enum entries without falling back to '?' */
+    /* Smoke-test that printer handles new enum entries without falling back to
+     * '?' */
     print_validation_result(&res);
 }
 

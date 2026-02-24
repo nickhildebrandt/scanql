@@ -1,4 +1,5 @@
 #include "sql-string.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -77,7 +78,7 @@ char sql_string_get_char(const SqlString* sql_str, int index)
     if (!sql_str || index < 0)
         return '\0';
 
-    size_t idx = (size_t)index;
+    size_t idx               = (size_t)index;
     const SqlString* current = sql_str;
     while (current)
     {
@@ -94,7 +95,7 @@ size_t sql_string_length(const SqlString* sql_str)
     if (!sql_str)
         return 0;
 
-    size_t total_length = 0;
+    size_t total_length      = 0;
     const SqlString* current = sql_str;
     while (current)
     {

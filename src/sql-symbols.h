@@ -117,6 +117,9 @@ typedef enum : unsigned short
 
     // Literals / identifiers / placeholders
     NUMBER,
+    DOUBLE_QUOTED_VALUE,
+    SINGLE_QUOTED_VALUE,
+    SQL_IDENTIFIER,
     STRING,
     STRING_VALUE,
     SQL_NULL,

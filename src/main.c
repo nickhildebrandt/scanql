@@ -154,6 +154,154 @@ typedef enum : unsigned short
     END
 } SqlSymbols;
 
+const char* symbol_to_str[] = {
+
+    // Core DML/DDL keywords
+    "SELECT",
+    "FROM",
+    "WHERE",
+    "CREATE",
+    "TABLE",
+    "DROP",
+    "IF",
+    "EXISTS",
+    "INSERT",
+    "INTO",
+    "NOT",
+    "IN",
+    "null",
+    "UPDATE",
+    "DELETE",
+    "VALUES",
+    "SET",
+    "RETURNING",
+
+    // Query modifiers & set operations
+    "DISTINCT",
+    "ALL_SYM",
+    "UNION",
+    "INTERSECT",
+    "EXCEPT",
+
+    // Joins
+    "JOIN",
+    "INNER",
+    "LEFT",
+    "RIGHT",
+    "FULL",
+    "OUTER",
+    "CROSS",
+    "ON",
+    "AS",
+
+    // Grouping / ordering / pagination
+    "GROUP",
+    "BY",
+    "HAVING",
+    "ORDER",
+    "ASC",
+    "DESC",
+    "LIMIT",
+    "OFFSET",
+    "FETCH",
+    "ROWS",
+    "ONLY",
+    "TOP",
+
+    // Conditions & predicates
+    "BETWEEN",
+    "LIKE",
+    "ILIKE",
+    "IS",
+    "ANY_SYM",
+    "SOME",
+    "ALL_PRED",
+    "EXISTS_PRED",
+    "TRUE_SYM",
+    "FALSE_SYM",
+
+    // CASE expression
+    "CASE",
+    "WHEN",
+    "THEN",
+    "ELSE_SYM",
+    "END_KW",
+
+    // Types
+    "TYPE_TEXT",
+    "TYPE_ENUM",
+    "TYPE_INT",
+    "TYPE_INTEGER",
+    "TYPE_BIGINT",
+    "TYPE_SMALLINT",
+    "TYPE_DECIMAL",
+    "TYPE_NUMERIC",
+    "TYPE_REAL",
+    "TYPE_DOUBLE",
+    "TYPE_FLOAT",
+    "TYPE_BOOLEAN",
+    "TYPE_CHAR",
+    "TYPE_VARCHAR",
+    "TYPE_DATE",
+    "TYPE_TIME",
+    "TYPE_TIMESTAMP",
+    "TYPE_BLOB",
+
+    // Operators & symbols
+    "COMMA",
+    "DOT",
+    "SEMICOLON",
+    "PLUS",
+    "MINUS_OP",
+    "STAR_OP",
+    "SLASH",
+    "PERCENT",
+    "CARET",
+    "CONCAT_OP",
+    "EQUALS",
+    "NOT_EQUAL",
+    "LESS",
+    "GREATER",
+    "LESS_EQUAL",
+    "GREATER_EQUAL",
+    "NEGATION",
+
+    // Literals / identifiers / placeholders
+    "NUMBER",
+    "DOUBLE_QUOTED_VALUE",
+    "SINGLE_QUOTED_VALUE",
+    "SQL_IDENTIFIER",
+    "STRING",
+    "STRING_VALUE",
+    "SQL_NULL",
+    "PARAMETER",
+    "IDENTIFIER",
+
+    // Logical operators
+    "AND",
+    "OR",
+
+    // Delimiters & comments
+    "ROUND_BRACKETS_OPEN",
+    "ROUND_BRACKETS_CLOSE",
+    "SQUARE_BRACKETS_OPEN",
+    "SQUARE_BRACKETS_CLOSE",
+    "INLINE_COMMENT_MINUS",
+    "MULTILINE_COMMENT_OPEN",
+    "MULTILINE_COMMENT_CLOSE",
+
+    // Parser expectation states (shared enum", reusing existing names when
+    // possible)
+    "SELECT_ITEM",    // column | *
+    "SELECT_CONT",    // ", | FROM
+    "WHERE_OR_END",   // WHERE | ;
+    "CONDITION_LHS",  // identifier
+    "CONDITION_OP",   // =
+    "CONDITION_RHS",  // literal
+    "CONDITION_CONT", // AND | OR | ;
+    "END",
+};
+
 typedef struct
 {
     char* value;
@@ -162,7 +310,9 @@ typedef struct
 
 void print_token(Token token)
 {
-    printf("Token { value: %s, type: %d}\n", token.value, token.type);
+    printf("Token { value: < %s >, type: %s}\n",
+           token.value,
+           symbol_to_str[token.type]);
 }
 
 /**
@@ -897,250 +1047,6 @@ static const char* expected_to_str(SqlSymbols e)
 }
 
 /**
- * symbol_to_str - Convert lexer symbol to human-readable label
- */
-static const char* symbol_to_str(SqlSymbols s)
-{
-    switch (s)
-    {
-        case SELECT:
-            return "SELECT";
-        case UPDATE:
-            return "UPDATE";
-        case DELETE:
-            return "DELETE";
-        case FROM:
-            return "FROM";
-        case WHERE:
-            return "WHERE";
-        case CREATE:
-            return "CREATE";
-        case TABLE:
-            return "TABLE";
-        case DROP:
-            return "DROP";
-        case IF:
-            return "IF";
-        case EXISTS:
-            return "EXISTS";
-        case INSERT:
-            return "INSERT";
-        case VALUES:
-            return "VALUES";
-        case SET:
-            return "SET";
-        case RETURNING:
-            return "RETURNING";
-        case DISTINCT:
-            return "DISTINCT";
-        case ALL_SYM:
-            return "ALL";
-        case UNION:
-            return "UNION";
-        case INTERSECT:
-            return "INTERSECT";
-        case EXCEPT:
-            return "EXCEPT";
-        case JOIN:
-            return "JOIN";
-        case INNER:
-            return "INNER";
-        case LEFT:
-            return "LEFT";
-        case RIGHT:
-            return "RIGHT";
-        case FULL:
-            return "FULL";
-        case OUTER:
-            return "OUTER";
-        case CROSS:
-            return "CROSS";
-        case ON:
-            return "ON";
-        case AS:
-            return "AS";
-        case GROUP:
-            return "GROUP";
-        case BY:
-            return "BY";
-        case HAVING:
-            return "HAVING";
-        case ORDER:
-            return "ORDER";
-        case ASC:
-            return "ASC";
-        case DESC:
-            return "DESC";
-        case LIMIT:
-            return "LIMIT";
-        case OFFSET:
-            return "OFFSET";
-        case FETCH:
-            return "FETCH";
-        case ROWS:
-            return "ROWS";
-        case ONLY:
-            return "ONLY";
-        case TOP:
-            return "TOP";
-        case BETWEEN:
-            return "BETWEEN";
-        case LIKE:
-            return "LIKE";
-        case ILIKE:
-            return "ILIKE";
-        case IS:
-            return "IS";
-        case ANY_SYM:
-            return "ANY";
-        case SOME:
-            return "SOME";
-        case ALL_PRED:
-            return "ALL_PRED";
-        case EXISTS_PRED:
-            return "EXISTS_PRED";
-        case TRUE_SYM:
-            return "TRUE";
-        case FALSE_SYM:
-            return "FALSE";
-        case CASE:
-            return "CASE";
-        case WHEN:
-            return "WHEN";
-        case THEN:
-            return "THEN";
-        case ELSE_SYM:
-            return "ELSE";
-        case END_KW:
-            return "END_KW";
-        case TYPE_TEXT:
-            return "TYPE_TEXT";
-        case TYPE_ENUM:
-            return "TYPE_ENUM";
-        case TYPE_INT:
-            return "TYPE_INT";
-        case TYPE_INTEGER:
-            return "TYPE_INTEGER";
-        case TYPE_BIGINT:
-            return "TYPE_BIGINT";
-        case TYPE_SMALLINT:
-            return "TYPE_SMALLINT";
-        case TYPE_DECIMAL:
-            return "TYPE_DECIMAL";
-        case TYPE_NUMERIC:
-            return "TYPE_NUMERIC";
-        case TYPE_REAL:
-            return "TYPE_REAL";
-        case TYPE_DOUBLE:
-            return "TYPE_DOUBLE";
-        case TYPE_FLOAT:
-            return "TYPE_FLOAT";
-        case TYPE_BOOLEAN:
-            return "TYPE_BOOLEAN";
-        case TYPE_CHAR:
-            return "TYPE_CHAR";
-        case TYPE_VARCHAR:
-            return "TYPE_VARCHAR";
-        case TYPE_DATE:
-            return "TYPE_DATE";
-        case TYPE_TIME:
-            return "TYPE_TIME";
-        case TYPE_TIMESTAMP:
-            return "TYPE_TIMESTAMP";
-        case TYPE_BLOB:
-            return "TYPE_BLOB";
-        case INTO:
-            return "INTO";
-        case NOT:
-            return "NOT";
-        case IN:
-            return "IN";
-        case null:
-            return "NULL";
-        case COMMA:
-            return "COMMA";
-        case DOT:
-            return "DOT";
-        case SEMICOLON:
-            return "SEMICOLON";
-        case PLUS:
-            return "PLUS";
-        case MINUS_OP:
-            return "MINUS";
-        case STAR_OP:
-            return "STAR";
-        case SLASH:
-            return "SLASH";
-        case PERCENT:
-            return "PERCENT";
-        case CARET:
-            return "CARET";
-        case CONCAT_OP:
-            return "CONCAT";
-        case EQUALS:
-            return "EQUALS";
-        case NOT_EQUAL:
-            return "NOT_EQUAL";
-        case LESS:
-            return "LESS";
-        case GREATER:
-            return "GREATER";
-        case LESS_EQUAL:
-            return "LESS_EQUAL";
-        case GREATER_EQUAL:
-            return "GREATER_EQUAL";
-        case NEGATION:
-            return "NEGATION";
-        case NUMBER:
-            return "NUMBER";
-        case STRING:
-            return "STRING";
-        case SQL_NULL:
-            return "SQL_NULL";
-        case PARAMETER:
-            return "PARAM";
-        case IDENTIFIER:
-            return "IDENTIFIER";
-        case AND:
-            return "AND";
-        case OR:
-            return "OR";
-        case ROUND_BRACKETS_OPEN:
-            return "RO(";
-        case ROUND_BRACKETS_CLOSE:
-            return "RO)";
-        case SQUARE_BRACKETS_OPEN:
-            return "SO[";
-        case SQUARE_BRACKETS_CLOSE:
-            return "SO]";
-        case INLINE_COMMENT_MINUS:
-            return "INLINE_COMMENT";
-        case MULTILINE_COMMENT_OPEN:
-            return "ML_COMMENT_OPEN";
-        case MULTILINE_COMMENT_CLOSE:
-            return "ML_COMMENT_CLOSE";
-        case SELECT_CONT:
-            return "EXPECT_SELECT_CONT";
-        case SELECT_ITEM:
-            return "EXPECT_SELECT_ITEM";
-        case WHERE_OR_END:
-            return "EXPECT_WHERE_OR_END";
-        case CONDITION_LHS:
-            return "EXPECT_COND_LHS";
-        case CONDITION_OP:
-            return "EXPECT_COND_OP";
-        case CONDITION_RHS:
-            return "EXPECT_COND_RHS";
-        case CONDITION_CONT:
-            return "EXPECT_COND_CONT";
-        case END:
-            return "EXPECT_END";
-        default:
-            return "?";
-    }
-}
-
-/**
  * describe_token - Render a token into a small textual description
  * @e: validation error holding the token
  * @buf: output buffer
@@ -1158,7 +1064,7 @@ static void describe_token(const ValidationError* e, char* buf, size_t n)
         return;
     }
 
-    const char* kind = symbol_to_str(t->type);
+    const char* kind = symbol_to_str[t->type];
     const char* val  = (t->value && t->value[0]) ? t->value : "";
 
     if (val[0])
@@ -1179,7 +1085,7 @@ static void token_name(const ValidationError* e, char* buf, size_t n)
         return;
     }
 
-    snprintf(buf, n, "%s", symbol_to_str(t->type));
+    snprintf(buf, n, "%s", symbol_to_str[t->type]);
 }
 
 /**
@@ -1234,33 +1140,38 @@ void print_validation_result(const ValidationResult* result)
  */
 int main(int argc, char* argv[])
 {
-    if (argc != 2)
-    {
-        fprintf(stderr, "Usage: %s <SQL-String>\n", argv[0]);
-        return 1;
-    }
-
-    const char* sql = argv[1];
+    // if (argc != 2)
+    // {
+    //     fprintf(stderr, "Usage: %s <SQL-String>\n", argv[0]);
+    //     return 1;
+    // }
+    //
+    // const char* sql = argv[1];
+    const char* sql = "select a,b from c where a.id = 1";
     size_t txt_len  = strlen(sql);
 
     Arena arena = init_static_arena(2 * txt_len + 16 + txt_len * sizeof(Token));
     TokenStack tokenList = get_tokens(sql, &arena);
 
-    /* Validate produced tokens */
-    ValidationError errs[tokenList.len + 2];
-    ValidationResult res = {
-        .ok             = true,
-        .error_count    = 0,
-        .error_capacity = sizeof(errs) / sizeof(errs[0]),
-        .errors         = errs,
-    };
+    for (int i = 0; i < tokenList.len; i++)
+    {
+        print_token(tokenList.elems[i]);
+    }
 
-    validate_query_with_errors(&tokenList, &res);
-    print_validation_result(&res);
+    // /* Validate produced tokens */
+    // ValidationError errs[tokenList.len + 2];
+    // ValidationResult res = {
+    //     .ok             = true,
+    //     .error_count    = 0,
+    //     .error_capacity = sizeof(errs) / sizeof(errs[0]),
+    //     .errors         = errs,
+    // };
+    //
+    // validate_query_with_errors(&tokenList, &res);
+    // print_validation_result(&res);
 
     arena_free(&arena);
 
-    printf("hello world");
     /* For CLI tests we only print diagnostics; always succeed exit code */
     return 0;
 }

@@ -1,23 +1,14 @@
-srcs = files(
-  'main.c',
-  'tokenizer.c',
-  'sql-string.c',
-  'sql-string-list.c',
-  'sql-validate.c',
-  'sql-validate-report.c',
-  'sql-token.c',
-  'sql-token-stack.c',
-)
-
 inc = include_directories('.')
 
+# Single-translation-unit build: all code lives in main.c
 scanql_exe = executable(
   'scanql',
-  srcs,
+  'main.c',
   include_directories : inc,
   install : true,
 )
 
+# CLI integration test: a valid SQL file must be accepted (exit 0)
 test(
   'cli-sql-valid',
   find_program('bash'),
@@ -29,7 +20,7 @@ test(
   ],
 )
 
-# Todo: needs to be set from 'ok' to 'fail'
+# CLI integration test: an invalid SQL file must be rejected (exit 1)
 test(
   'cli-sql-invalid',
   find_program('bash'),
@@ -37,6 +28,6 @@ test(
     join_paths(meson.project_source_root(), 'scripts', 'arg-test.sh'),
     join_paths(meson.project_source_root(), 'sql', 'invalid.sql'),
     scanql_exe,
-    'ok',
+    'fail',
   ],
 )

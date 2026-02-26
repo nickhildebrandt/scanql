@@ -1,44 +1,74 @@
 flowchart TD
 
-  %% ===== Main =====
-  A([Start]) --> B[main.c: Read SQL file or STDIN]
-  B --> C[tokenizer.c: Start tokenization]
+  %% ===== Programmstart =====
+  A([Programmstart]) --> B{Wurde ein Argument übergeben?}
+  B -- Ja --> C[SQL-String aus dem ersten Argument lesen]
+  B -- Nein --> D[Standard Demo-Abfrage verwenden]
+  C --> E1[Länge des SQL-Strings berechnen]
+  D --> E1
+  E1 --> E2[Speicherblock reservieren: Platz für Token-Objekte und alle Zeichenwerte]
+  E2 --> E3[Lesezeiger auf Position 0 setzen]
+  E3 --> E[Token-Liste mit Kapazität und leerem Inhalt anlegen]
 
   %% ===== Tokenizer =====
-  C --> D[Split SQL text into tokens]
-  D --> E[Assign token types from SqlSymbols]
-  E --> F[Create token list with type and value]
-  F --> G[Call validator API]
+  E --> F0{Ist das Ende des Textes erreicht?}
+  F0 -- Nein --> F1[Nächstes Zeichen lesen]
+  F0 -- Ja --> G[Validator aufrufen: Prüft die Token-Liste auf korrekte SQL-Syntax]
+
+  F1 --> F2{Welcher Zeichentyp liegt vor?}
+  F2 -- Leerzeichen / Tabulator / Zeilenumbruch --> F8[Zeichen überspringen und weiterlesen]
+  F2 -- Unbekanntes Zeichen --> F8
+  F8 --> F0
+
+  F2 -- Komma, Semikolon, Gleichheitszeichen, Klammern, Sternchen --> F3[Einfaches Token erstellen]
+  F2 -- Doppeltes Anführungszeichen --> F4[Als doppelten Textwert markieren und Trennzeichen auf doppeltes Anführungszeichen setzen]
+  F2 -- Einfaches Anführungszeichen --> F5[Als einfachen Textwert markieren und Trennzeichen auf einfaches Anführungszeichen setzen]
+  F2 -- Buchstabe oder Unterstrich --> F6[Als SQL-Bezeichner markieren und Trennzeichen auf Komma, Semikolon, Klammern setzen]
+  F2 -- Ziffer --> F7[Als Zahl markieren und Trennzeichen auf Komma, Semikolon, Klammern setzen]
+
+  F3 & F4 & F5 & F6 & F7 --> F9{Ist das Token genau ein Zeichen lang?}
+  
+  F9 -- Ja z.B. bei Komma oder Semikolon --> F10[Lesezeiger um eins erhöhen da das Token sofort zu Ende ist]
+  F9 -- Nein z.B. bei Wörtern oder Zahlen --> F11[Schleife: Zeichen für Zeichen weiterlesen bis das vorher festgelegte Trennzeichen gefunden wird]
+  
+  F10 & F11 --> F12[Textwert des Tokens aus dem Speicherbereich kopieren und Null-Terminierung hinzufügen]
+  
+  F12 --> F13[Prüfen ob das Wort ein Schlüsselwort wie SELECT, FROM oder AND ist]
+  F13 --> F14[Fertiges Token in der Token-Liste speichern]
+  F14 --> F0
 
   %% ===== Validator =====
-  G --> H[State machine expects SELECT collist FROM table optional WHERE]
-  H --> I{Syntax error or fatal state}
+  G --> G1[Startzustand festlegen: Erwartet wird SELECT, UPDATE, DELETE oder INSERT]
+  G1 --> G2[Schleife: Alle Tokens nacheinander durchgehen]
+  
+  G2 --> G3{Wurden alle Tokens verarbeitet?}
+  G3 -- Nein --> G10([Ergebnis: Erfolgreich oder Fehlerhaft])
+  G3 -- Ja --> G4[Aktuellen Typ aus dem Token auslesen oder auf ENDE setzen falls letztes Token]
+  
+  G4 --> G7{Ist der aktuelle Typ in der Liste der erwarteten Typen?}
+  G7 -- Nein --> G8[Fehler aufzeichnen mit Position und erwarteten Typen]
+  G7 -- Ja --> G11[Neue Liste der erwarteten Typen für das nächste Token aus der Übergangstabelle laden]
+  
+  G8 --> G12[Mit dem nächsten Token fortfahren]
+  G11 --> G12
+  G12 --> G2
 
-  I -- No --> J[Iterate tokens and check expected types]
-  J --> K{Token matches expectation}
+  %% ===== Ausgabe =====
+  G10 --> H[Ergebnis der Validierung auf der Konsole ausgeben]
 
-  K -- Yes --> L[Continue with next token]
-  L --> I
+  H --> H1{War die Validierung erfolgreich?}
+  H1 -- Ja --> H2[Grüne Meldung ausgeben: validation ok]
+  H1 -- Nein --> H3[Rote Fehlermeldung ausgeben: Unerwartetes Token gefunden, erwartet wurde...]
 
-  K -- No --> M[record_error store expected got index fatal]
-  M --> N{Fatal flag true}
-
-  N -- Yes --> O[Stop validation immediately]
-  N -- No --> P[Continue and collect more errors]
-  P --> I
-
-  I -- Yes --> Q[Generate validation report]
-
-  %% ===== Report =====
-  Q --> R{Any errors recorded}
-  R -- No --> S[Print green validation ok]
-  R -- Yes --> T[Print first error message]
-  T --> U{More errors exist}
-  U -- Yes --> V[Print and N more errors]
-  U -- No --> W[No additional message]
+  H3 --> H5{Gibt es mehr als einen Fehler?}
+  H5 -- Ja --> H6[Hinweis auf weitere Fehler ausgeben]
+  H5 -- Nein --> I
+  
+  H2 --> I[Reservierten Speicherbereich wieder freigeben]
+  H6 --> I
 
   %% ===== Exit =====
-  S --> X[Exit code currently always 0]
-  V --> X
-  W --> X
-  X --> Y([End])
+  I --> J{War die Validierung erfolgreich?}
+  J -- Ja --> K([Programm mit Erfolgs-Code 0 beenden])
+  J -- Nein --> L([Programm mit Fehler-Code 1 beenden])
+

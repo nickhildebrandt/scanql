@@ -31,7 +31,7 @@ flowchart TD
   F9 -- Ja z.B. bei Komma oder Semikolon --> F10[Lesezeiger um eins erhöhen da das Token sofort zu Ende ist]
   F9 -- Nein z.B. bei Wörtern oder Zahlen --> F11[Schleife: Zeichen für Zeichen weiterlesen bis das vorher festgelegte Trennzeichen gefunden wird]
   
-  F10 & F11 --> F12[Textwert des Tokens aus dem Speicherbereich kopieren und Null-Terminierung hinzufügen]
+  F10 & F11 --> F12[Textwert des Tokens aus dem Speicherbereich kopieren, Null-Terminierung hinzufügen und Startposition im SQL-String speichern]
   
   F12 --> F13[Prüfen ob das Wort ein Schlüsselwort wie SELECT, FROM oder AND ist]
   F13 --> F14[Fertiges Token in der Token-Liste speichern]
@@ -59,8 +59,10 @@ flowchart TD
   H --> H1{War die Validierung erfolgreich?}
   H1 -- Ja --> H2[Grüne Meldung ausgeben: validation ok]
   H1 -- Nein --> H3[Rote Fehlermeldung ausgeben: Unerwartetes Token gefunden, erwartet wurde...]
-
-  H3 --> H5{Gibt es mehr als einen Fehler?}
+  H3 --> H4{Hat das fehlerhafte Token eine bekannte Position?}
+  H4 -- Ja --> H4A[SQL-String ausgeben und Zeiger-Markierung unter dem fehlerhaften Token ausgeben]
+  H4 -- Nein d.h. unerwartetes Ende --> H4B[SQL-String ausgeben und Zeiger-Markierung hinter dem letzten Zeichen mit Hinweis auf unerwartetes Ende ausgeben]
+  H4A & H4B --> H5{Gibt es mehr als einen Fehler?}
   H5 -- Ja --> H6[Hinweis auf weitere Fehler ausgeben]
   H5 -- Nein --> I
   

@@ -82,6 +82,7 @@ typedef struct
 {
     char* value;
     SqlSymbols type;
+    int pos; // byte offset in the original SQL string
 } Token;
 
 void print_token(Token token)
@@ -262,18 +263,18 @@ bool match(const char* to_compare, const char* compare_to)
 
 typedef Token Keyword;
 Keyword keywords[] = {
-    {"select", SELECT},
-    {"from", FROM},
-    {"where", WHERE},
-    {"insert", INSERT},
-    {"into", INTO},
-    {"update", UPDATE},
-    {"delete", DELETE},
-    {"values", VALUES},
-    {"set", SET},
-    {"join", JOIN},
-    {"and", AND},
-    {"or", OR},
+    {"select", SELECT, 0},
+    {"from", FROM, 0},
+    {"where", WHERE, 0},
+    {"insert", INSERT, 0},
+    {"into", INTO, 0},
+    {"update", UPDATE, 0},
+    {"delete", DELETE, 0},
+    {"values", VALUES, 0},
+    {"set", SET, 0},
+    {"join", JOIN, 0},
+    {"and", AND, 0},
+    {"or", OR, 0},
 };
 const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 
@@ -376,7 +377,8 @@ TokenStack get_tokens(const char* sql, Arena* arena)
                 }
         }
 
-        int start = index;
+        int start  = index;
+        token.pos  = start;
         if (is_single)
         {
             index++;
@@ -472,6 +474,7 @@ typedef struct
  * @error_capacity: capacity of the caller-provided @errors buffer
  * @errors: pointer to caller-provided buffer to store up to @error_capacity
  * errors
+ * @sql: original SQL string, used for context printing (may be NULL)
  */
 typedef struct
 {
@@ -479,6 +482,7 @@ typedef struct
     size_t error_count;
     size_t error_capacity;
     ValidationError* errors;
+    const char* sql;
 } ValidationResult;
 
 /**
@@ -721,6 +725,10 @@ static void expected_to_str(Valid_Symbols e, char* buf, size_t n)
 /**
  * print_validation_result - Pretty-print validation outcome with ANSI colors
  * @result: validation result to print (must not be NULL)
+ *
+ * When result->sql is set and a bad token is found, the original SQL string is
+ * printed with a caret (^) pointing to the start of the offending token so the
+ * user can immediately see which part of the query is wrong.
  */
 void print_validation_result(const ValidationResult* result)
 {
@@ -754,6 +762,34 @@ void print_validation_result(const ValidationResult* result)
         printf(" [and %zu more]", result->error_count - 1);
 
     printf("\n");
+
+    /* Show the original SQL with a caret pointing at the bad token */
+    if (result->sql && e0->token && e0->token->value)
+    {
+        const char* sql = result->sql;
+        int offset      = e0->token->pos;
+        int val_len     = (int)strlen(e0->token->value);
+
+        printf("  %s\n", sql);
+        printf("  ");
+        for (int i = 0; i < offset; i++)
+            printf(" ");
+        printf(CLR_RED);
+        for (int i = 0; i < val_len; i++)
+            printf("^");
+        printf(CLR_RESET "\n");
+    }
+    else if (result->sql && !e0->token)
+    {
+        /* EOF error: point past the end of the SQL */
+        const char* sql = result->sql;
+        size_t sql_len  = strlen(sql);
+        printf("  %s\n", sql);
+        printf("  ");
+        for (size_t i = 0; i < sql_len; i++)
+            printf(" ");
+        printf(CLR_RED "^" CLR_RESET " (unerwartetes Ende)\n");
+    }
 }
 
 // NOTE: for developing tests and triggering treesitter to highlight
@@ -800,6 +836,7 @@ int main(int argc, char* argv[])
         .error_count    = 0,
         .error_capacity = sizeof(errs) / sizeof(errs[0]),
         .errors         = errs,
+        .sql            = sql,
     };
 
     validate_query_with_errors(&tokenList, &res);

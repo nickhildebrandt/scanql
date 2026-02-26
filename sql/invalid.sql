@@ -44,3 +44,9 @@ SELECT a, b, FROM t;
 SELECT FROM FROM t;
 -- AND followed by a bare number (not an identifier)
 SELECT a FROM t WHERE id = 1 AND 2;
+-- = without spaces: missing LHS identifier
+SELECT a FROM t WHERE =1;
+-- = without spaces: SET missing LHS identifier
+UPDATE t SET =1;
+-- = without spaces: missing RHS value
+SELECT a FROM t WHERE id= ;

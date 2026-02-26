@@ -40,3 +40,7 @@ UPDATE users SET age = 30 WHERE id = 1;
 UPDATE orders SET status = 'done' WHERE id = 2;
 -- UPDATE with multi-condition WHERE
 UPDATE t SET a = 'x' WHERE b = 'y' AND c = 1;
+-- = without spaces around it
+SELECT a FROM t WHERE id=1;
+UPDATE t SET name='nick' WHERE id=1;
+DELETE FROM t WHERE id=42;

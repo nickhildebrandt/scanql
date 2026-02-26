@@ -362,12 +362,12 @@ TokenStack get_tokens(const char* sql, Arena* arena)
                 if (isalpha(c) || c == '_')
                 {
                     token.type = SQL_IDENTIFIER;
-                    strcat(seperators, ",;()");
+                    strcat(seperators, ",;()=");
                 }
                 else if (isdigit(c))
                 {
                     token.type = NUMBER;
-                    strcat(seperators, ",;()");
+                    strcat(seperators, ",;()=");
                 }
                 else
                 {

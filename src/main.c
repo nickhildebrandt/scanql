@@ -6,6 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+// TODO: remove a lot of Symbols(select_item) and so on just the rudimentary
+// ones
+
+//
+/*
+ * SqlToken - Enumeration of SQL token types
+ */
+
 typedef enum : unsigned short
 {
     // Core DML/DDL keywords
@@ -154,6 +162,9 @@ typedef enum : unsigned short
     END
 } SqlSymbols;
 
+/*
+ * symbol_to_str - usage by indexing with enum value from SqlSymbols
+ */
 const char* symbol_to_str[] = {
 
     // Core DML/DDL keywords
@@ -666,6 +677,8 @@ typedef struct
     ValidationError* errors;
 } ValidationResult;
 
+// TODO: remove the parser_t and all the token_is_x functions
+
 typedef struct
 {
     SqlSymbols expected;
@@ -923,6 +936,145 @@ static void record_error(ValidationResult* r,
     r->error_count++;
 }
 
+// TODO: use this struct for the expected_symbols
+typedef struct
+{
+    SqlSymbols valids[10]; // max symbols
+    unsigned char len; // The current length of the Valid_Symbols, indicating
+                       // how many valids there actually are
+} Valid_Symbols;
+
+/*
+ * expected_table - usage by indexing with enum value from SqlSymbols
+ * NOTE: only for the possible direct next token
+ * 72 is the current number of enum values
+ */
+const SqlSymbols expected_table[][10] = {
+    {SQL_IDENTIFIER,
+     ROUND_BRACKETS_OPEN,
+     SINGLE_QUOTED_VALUE,
+     DOUBLE_QUOTED_VALUE},                           // SELECT,
+    {SQL_IDENTIFIER},                                // FROM,
+    {SQL_IDENTIFIER, ROUND_BRACKETS_OPEN},           // WHERE,
+    {},                                              // CREATE,
+    {},                                              // TABLE,
+    {},                                              // DROP,
+    {},                                              // IF,
+    {},                                              // EXISTS,
+    {},                                              // INSERT,
+    {},                                              // INTO,
+    {},                                              // NOT,
+    {},                                              // IN,
+    {},                                              // null,
+    {},                                              // UPDATE,
+    {},                                              // DELETE,
+    {},                                              // VALUES,
+    {},                                              // SET,
+    {},                                              // RETURNING,
+    {},                                              // DISTINCT,
+    {},                                              // ALL_SYM,
+    {},                                              // UNION,
+    {},                                              // INTERSECT,
+    {},                                              // EXCEPT,
+    {},                                              // JOIN,
+    {},                                              // INNER,
+    {},                                              // LEFT,
+    {},                                              // RIGHT,
+    {},                                              // FULL,
+    {},                                              // OUTER,
+    {},                                              // CROSS,
+    {},                                              // ON,
+    {},                                              // AS,
+    {},                                              // GROUP,
+    {},                                              // BY,
+    {},                                              // HAVING,
+    {},                                              // ORDER,
+    {},                                              // ASC,
+    {},                                              // DESC,
+    {},                                              // LIMIT,
+    {},                                              // OFFSET,
+    {},                                              // FETCH,
+    {},                                              // ROWS,
+    {},                                              // ONLY,
+    {},                                              // TOP,
+    {},                                              // BETWEEN,
+    {},                                              // LIKE,
+    {},                                              // ILIKE,
+    {},                                              // IS,
+    {},                                              // ANY_SYM,
+    {},                                              // SOME,
+    {},                                              // ALL_PRED,
+    {},                                              // EXISTS_PRED,
+    {},                                              // TRUE_SYM,
+    {},                                              // FALSE_SYM,
+    {},                                              // CASE,
+    {},                                              // WHEN,
+    {},                                              // THEN,
+    {},                                              // ELSE_SYM,
+    {},                                              // END_KW,
+    {},                                              // TYPE_TEXT,
+    {},                                              // TYPE_ENUM,
+    {},                                              // TYPE_INT,
+    {},                                              // TYPE_INTEGER,
+    {},                                              // TYPE_BIGINT,
+    {},                                              // TYPE_SMALLINT,
+    {},                                              // TYPE_DECIMAL,
+    {},                                              // TYPE_NUMERIC,
+    {},                                              // TYPE_REAL,
+    {},                                              // TYPE_DOUBLE,
+    {},                                              // TYPE_FLOAT,
+    {},                                              // TYPE_BOOLEAN,
+    {},                                              // TYPE_CHAR,
+    {},                                              // TYPE_VARCHAR,
+    {},                                              // TYPE_DATE,
+    {},                                              // TYPE_TIME,
+    {},                                              // TYPE_TIMESTAMP,
+    {},                                              // TYPE_BLOB,
+    {},                                              // COMMA,
+    {},                                              // DOT,
+    {},                                              // SEMICOLON,
+    {},                                              // PLUS,
+    {},                                              // MINUS_OP,
+    {},                                              // STAR_OP,
+    {},                                              // SLASH,
+    {},                                              // PERCENT,
+    {},                                              // CARET,
+    {},                                              // CONCAT_OP,
+    {},                                              // EQUALS,
+    {},                                              // NOT_EQUAL,
+    {},                                              // LESS,
+    {},                                              // GREATER,
+    {},                                              // LESS_EQUAL,
+    {},                                              // GREATER_EQUAL,
+    {},                                              // NEGATION,
+    {},                                              // NUMBER,
+    {},                                              // DOUBLE_QUOTED_VALUE,
+    {},                                              // SINGLE_QUOTED_VALUE,
+    {COMMA, ROUND_BRACKETS_CLOSE, EQUALS, NEGATION}, // SQL_IDENTIFIER,
+    {},                                              // STRING,
+    {},                                              // STRING_VALUE,
+    {},                                              // SQL_NULL,
+    {},                                              // PARAMETER,
+    {},                                              // IDENTIFIER,
+    {},                                              // AND,
+    {},                                              // OR,
+    {},                                              // ROUND_BRACKETS_OPEN,
+    {},                                              // ROUND_BRACKETS_CLOSE,
+    {},                                              // SQUARE_BRACKETS_OPEN,
+    {},                                              // SQUARE_BRACKETS_CLOSE,
+    {},                                              // INLINE_COMMENT_MINUS,
+    {},                                              // MULTILINE_COMMENT_OPEN,
+    {},                                              // MULTILINE_COMMENT_CLOSE,
+    {}, // SELECT_ITEM,    // column | *
+    {}, // SELECT_CONT,    // , | FROM
+    {}, // WHERE_OR_END,   // WHERE | ;
+    {}, // CONDITION_LHS,  // identifier
+    {}, // CONDITION_OP,   // =
+    {}, // CONDITION_RHS,  // literal
+    {}, // CONDITION_CONT, // AND | OR | ;
+    {}, // END
+};
+
 /**
  * validate_query_with_errors - Validate and collect all errors
  * @tokens: token stack to validate
@@ -939,49 +1091,55 @@ bool validate_query_with_errors(const TokenStack* tokens,
     result->ok          = true;
     result->error_count = 0;
 
-    parser_t p                = {.expected = SELECT};
-    bool aborted              = false;
-    int abort_pos             = -1;
-    const Token* abort_token  = NULL;
-    SqlSymbols abort_expected = END;
-
-    /* iterate through tokens, treat array end as EOF */
-    for (int i = 0; i <= tokens->len; ++i)
+    // NOTE: maybe fuzzy match for here
+    for (int i = 0; i < tokens->len; i++)
     {
-        bool is_eof    = (i == tokens->len);
-        const Token* t = is_eof ? NULL : &tokens->elems[i];
-
-        if (!is_eof && !token_is_valid_lexeme(t))
-        {
-            record_error(result, t, i, p.expected, "invalid token");
-            aborted        = true;
-            abort_pos      = i;
-            abort_token    = t;
-            abort_expected = p.expected;
-            break;
-        }
-
-        if (!accept(&p, t, is_eof))
-        {
-            record_error(result, t, i, p.expected, "unexpected token");
-            continue;
-        }
     }
 
-    if (aborted)
-    {
-        record_error(result,
-                     abort_token,
-                     abort_pos >= 0 ? abort_pos : tokens->len,
-                     abort_expected,
-                     "fatal: stopped parsing after invalid token");
-        return result->ok;
-    }
-
-    if (p.expected != END)
-    {
-        record_error(result, NULL, tokens->len, p.expected, "incomplete query");
-    }
+    // parser_t p                = {.expected = SELECT};
+    // bool aborted              = false;
+    // int abort_pos             = -1;
+    // const Token* abort_token  = NULL;
+    // SqlSymbols abort_expected = END;
+    //
+    // /* iterate through tokens, treat array end as EOF */
+    // for (int i = 0; i <= tokens->len; ++i)
+    // {
+    //     bool is_eof    = (i == tokens->len);
+    //     const Token* t = is_eof ? NULL : &tokens->elems[i];
+    //
+    //     if (!is_eof && !token_is_valid_lexeme(t))
+    //     {
+    //         record_error(result, t, i, p.expected, "invalid token");
+    //         aborted        = true;
+    //         abort_pos      = i;
+    //         abort_token    = t;
+    //         abort_expected = p.expected;
+    //         break;
+    //     }
+    //
+    //     if (!accept(&p, t, is_eof))
+    //     {
+    //         record_error(result, t, i, p.expected, "unexpected token");
+    //         continue;
+    //     }
+    // }
+    //
+    // if (aborted)
+    // {
+    //     record_error(result,
+    //                  abort_token,
+    //                  abort_pos >= 0 ? abort_pos : tokens->len,
+    //                  abort_expected,
+    //                  "fatal: stopped parsing after invalid token");
+    //     return result->ok;
+    // }
+    //
+    // if (p.expected != END)
+    // {
+    //     record_error(result, NULL, tokens->len, p.expected, "incomplete
+    //     query");
+    // }
 
     return result->ok;
 }
@@ -1153,22 +1311,24 @@ int main(int argc, char* argv[])
     Arena arena = init_static_arena(2 * txt_len + 16 + txt_len * sizeof(Token));
     TokenStack tokenList = get_tokens(sql, &arena);
 
-    for (int i = 0; i < tokenList.len; i++)
-    {
-        print_token(tokenList.elems[i]);
-    }
+    // TODO: loop over the expected_table for validation use the enum indexing
+    // to get the current Valid_Symbols and then use the len to loop over it for
+    // (int i = 0; i < tokenList.len; i++)
+    // {
+    //     print_token(tokenList.elems[i]);
+    // }
 
-    // /* Validate produced tokens */
-    // ValidationError errs[tokenList.len + 2];
-    // ValidationResult res = {
-    //     .ok             = true,
-    //     .error_count    = 0,
-    //     .error_capacity = sizeof(errs) / sizeof(errs[0]),
-    //     .errors         = errs,
-    // };
-    //
-    // validate_query_with_errors(&tokenList, &res);
-    // print_validation_result(&res);
+    /* Validate produced tokens */
+    ValidationError errs[tokenList.len + 2];
+    ValidationResult res = {
+        .ok             = true,
+        .error_count    = 0,
+        .error_capacity = sizeof(errs) / sizeof(errs[0]),
+        .errors         = errs,
+    };
+
+    validate_query_with_errors(&tokenList, &res);
+    print_validation_result(&res);
 
     arena_free(&arena);
 

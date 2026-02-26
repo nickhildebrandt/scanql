@@ -26,59 +26,57 @@ typedef enum : unsigned short
     VALUES,
     SET,
     JOIN,
-    
+
     COMMA,
     SEMICOLON,
     EQUALS,
     STAR,
-    
+
     NUMBER,
     DOUBLE_QUOTED_VALUE,
     SINGLE_QUOTED_VALUE,
     SQL_IDENTIFIER,
-    
+
     AND,
     OR,
-    
+
     ROUND_BRACKETS_OPEN,
     ROUND_BRACKETS_CLOSE,
-    
+
     END
 } SqlSymbols;
 
 /*
  * symbol_to_str - usage by indexing with enum value from SqlSymbols
  */
-const char* symbol_to_str[] = {
-    "SELECT",
-    "FROM",
-    "WHERE",
-    "UPDATE",
-    "DELETE",
-    "INSERT",
-    "INTO",
-    "VALUES",
-    "SET",
-    "JOIN",
-    
-    "COMMA",
-    "SEMICOLON",
-    "EQUALS",
-    "STAR",
-    
-    "NUMBER",
-    "DOUBLE_QUOTED_VALUE",
-    "SINGLE_QUOTED_VALUE",
-    "SQL_IDENTIFIER",
-    
-    "AND",
-    "OR",
-    
-    "ROUND_BRACKETS_OPEN",
-    "ROUND_BRACKETS_CLOSE",
-    
-    "END"
-};
+const char* symbol_to_str[] = {"SELECT",
+                               "FROM",
+                               "WHERE",
+                               "UPDATE",
+                               "DELETE",
+                               "INSERT",
+                               "INTO",
+                               "VALUES",
+                               "SET",
+                               "JOIN",
+
+                               "COMMA",
+                               "SEMICOLON",
+                               "EQUALS",
+                               "STAR",
+
+                               "NUMBER",
+                               "DOUBLE_QUOTED_VALUE",
+                               "SINGLE_QUOTED_VALUE",
+                               "SQL_IDENTIFIER",
+
+                               "AND",
+                               "OR",
+
+                               "ROUND_BRACKETS_OPEN",
+                               "ROUND_BRACKETS_CLOSE",
+
+                               "END"};
 
 typedef struct
 {
@@ -264,18 +262,18 @@ bool match(const char* to_compare, const char* compare_to)
 
 typedef Token Keyword;
 Keyword keywords[] = {
-    {"select",   SELECT},
-    {"from",     FROM},
-    {"where",    WHERE},
-    {"insert",   INSERT},
-    {"into",     INTO},
-    {"update",   UPDATE},
-    {"delete",   DELETE},
-    {"values",   VALUES},
-    {"set",      SET},
-    {"join",     JOIN},
-    {"and",      AND},
-    {"or",       OR},
+    {"select", SELECT},
+    {"from", FROM},
+    {"where", WHERE},
+    {"insert", INSERT},
+    {"into", INTO},
+    {"update", UPDATE},
+    {"delete", DELETE},
+    {"values", VALUES},
+    {"set", SET},
+    {"join", JOIN},
+    {"and", AND},
+    {"or", OR},
 };
 const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 
@@ -520,35 +518,56 @@ static void record_error(ValidationResult* r,
  * a trailing semicolon where appropriate.
  */
 const Valid_Symbols expected_table[] = {
-    [SELECT] = { {SQL_IDENTIFIER, STAR}, 2 },
-    [FROM] = { {SQL_IDENTIFIER}, 1 },
-    [WHERE] = { {SQL_IDENTIFIER}, 1 },
-    [UPDATE] = { {SQL_IDENTIFIER}, 1 },
-    [DELETE] = { {FROM}, 1 },
-    [INSERT] = { {INTO}, 1 },
-    [INTO] = { {SQL_IDENTIFIER}, 1 },
-    [VALUES] = { {ROUND_BRACKETS_OPEN}, 1 },
-    [SET] = { {SQL_IDENTIFIER}, 1 },
-    [JOIN] = { {SQL_IDENTIFIER}, 1 },
-    
-    [COMMA] = { {SQL_IDENTIFIER, STAR, NUMBER, SINGLE_QUOTED_VALUE, DOUBLE_QUOTED_VALUE}, 5 },
-    [SEMICOLON] = { {END}, 1 },
-    [EQUALS] = { {NUMBER, SINGLE_QUOTED_VALUE, DOUBLE_QUOTED_VALUE, SQL_IDENTIFIER}, 4 },
-    [STAR] = { {COMMA, FROM, END}, 3 },
-    
-    [NUMBER] = { {COMMA, SEMICOLON, AND, OR, WHERE, ROUND_BRACKETS_CLOSE, END}, 7 },
-    [DOUBLE_QUOTED_VALUE] = { {COMMA, SEMICOLON, AND, OR, WHERE, ROUND_BRACKETS_CLOSE, END}, 7 },
-    [SINGLE_QUOTED_VALUE] = { {COMMA, SEMICOLON, AND, OR, WHERE, ROUND_BRACKETS_CLOSE, END}, 7 },
-    [SQL_IDENTIFIER] = { {COMMA, FROM, WHERE, EQUALS, SEMICOLON, AND, OR, JOIN, ROUND_BRACKETS_CLOSE, SET, VALUES, END}, 12 },
-    
-    [AND] = { {SQL_IDENTIFIER}, 1 },
-    [OR] = { {SQL_IDENTIFIER}, 1 },
-    
-    [ROUND_BRACKETS_OPEN] = { {SQL_IDENTIFIER, NUMBER, SINGLE_QUOTED_VALUE, DOUBLE_QUOTED_VALUE}, 4 },
-    [ROUND_BRACKETS_CLOSE] = { {COMMA, SEMICOLON, AND, OR, WHERE}, 5 },
-    
-    [END] = { {END}, 1 }
-};
+    [SELECT] = {{SQL_IDENTIFIER, STAR}, 2},
+    [FROM]   = {{SQL_IDENTIFIER}, 1},
+    [WHERE]  = {{SQL_IDENTIFIER}, 1},
+    [UPDATE] = {{SQL_IDENTIFIER}, 1},
+    [DELETE] = {{FROM}, 1},
+    [INSERT] = {{INTO}, 1},
+    [INTO]   = {{SQL_IDENTIFIER}, 1},
+    [VALUES] = {{ROUND_BRACKETS_OPEN}, 1},
+    [SET]    = {{SQL_IDENTIFIER}, 1},
+    [JOIN]   = {{SQL_IDENTIFIER}, 1},
+
+    [COMMA]     = {{SQL_IDENTIFIER,
+                    STAR,
+                    NUMBER,
+                    SINGLE_QUOTED_VALUE,
+                    DOUBLE_QUOTED_VALUE},
+                   5},
+    [SEMICOLON] = {{END}, 1},
+    [EQUALS] =
+        {{NUMBER, SINGLE_QUOTED_VALUE, DOUBLE_QUOTED_VALUE, SQL_IDENTIFIER}, 4},
+    [STAR] = {{COMMA, FROM, END}, 3},
+
+    [NUMBER] = {{COMMA, SEMICOLON, AND, OR, WHERE, ROUND_BRACKETS_CLOSE, END},
+                7},
+    [DOUBLE_QUOTED_VALUE] =
+        {{COMMA, SEMICOLON, AND, OR, WHERE, ROUND_BRACKETS_CLOSE, END}, 7},
+    [SINGLE_QUOTED_VALUE] =
+        {{COMMA, SEMICOLON, AND, OR, WHERE, ROUND_BRACKETS_CLOSE, END}, 7},
+    [SQL_IDENTIFIER] = {{COMMA,
+                         FROM,
+                         WHERE,
+                         EQUALS,
+                         SEMICOLON,
+                         AND,
+                         OR,
+                         JOIN,
+                         ROUND_BRACKETS_CLOSE,
+                         SET,
+                         VALUES,
+                         END},
+                        12},
+
+    [AND] = {{SQL_IDENTIFIER}, 1},
+    [OR]  = {{SQL_IDENTIFIER}, 1},
+
+    [ROUND_BRACKETS_OPEN] =
+        {{SQL_IDENTIFIER, NUMBER, SINGLE_QUOTED_VALUE, DOUBLE_QUOTED_VALUE}, 4},
+    [ROUND_BRACKETS_CLOSE] = {{COMMA, SEMICOLON, AND, OR, WHERE}, 5},
+
+    [END] = {{END}, 1}};
 
 /**
  * validate_query_with_errors - Validate and collect all errors
@@ -571,12 +590,12 @@ bool validate_query_with_errors(const TokenStack* tokens,
         return true;
     }
 
-    Valid_Symbols expected = { {SELECT, UPDATE, DELETE, INSERT}, 4 };
+    Valid_Symbols expected = {{SELECT, UPDATE, DELETE, INSERT}, 4};
 
     for (int i = 0; i <= tokens->len; i++)
     {
-        bool is_eof = (i == tokens->len);
-        const Token* t = is_eof ? NULL : &tokens->elems[i];
+        bool is_eof       = (i == tokens->len);
+        const Token* t    = is_eof ? NULL : &tokens->elems[i];
         SqlSymbols t_type = is_eof ? END : t->type;
 
         bool is_valid = false;
@@ -900,12 +919,12 @@ static void test_report_formats_new_symbols(void)
     ValidationError errs[2];
     errs[0].token    = &(Token){.value = "UPDATE", .type = UPDATE};
     errs[0].position = 0;
-    errs[0].expected = (Valid_Symbols){ {SELECT}, 1 }; /* arbitrary state */
+    errs[0].expected = (Valid_Symbols){{SELECT}, 1}; /* arbitrary state */
     errs[0].message  = "unexpected token";
 
     errs[1].token    = &(Token){.value = "JOIN", .type = JOIN};
     errs[1].position = 1;
-    errs[1].expected = (Valid_Symbols){ {SQL_IDENTIFIER}, 1 };
+    errs[1].expected = (Valid_Symbols){{SQL_IDENTIFIER}, 1};
     errs[1].message  = "unexpected token";
 
     ValidationResult res = {

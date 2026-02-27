@@ -26,6 +26,8 @@ typedef enum : unsigned short
     VALUES,
     SET,
     JOIN,
+    CREATE,
+    TABLE,
 
     COMMA,
     SEMICOLON,
@@ -36,6 +38,12 @@ typedef enum : unsigned short
     DOUBLE_QUOTED_VALUE,
     SINGLE_QUOTED_VALUE,
     SQL_IDENTIFIER,
+    TABLE_NAME,   // SQL_IDENTIFIER promoted to table-name after TABLE keyword
+    COLUMN_NAME,  // SQL_IDENTIFIER promoted to column-name in CREATE TABLE
+    COLUMN_TYPE,  // SQL_IDENTIFIER promoted to column-type in CREATE TABLE
+    CREATE_COMMA, // COMMA after a COLUMN_TYPE — only valid in CREATE TABLE context
+    CREATE_PAREN_OPEN,  // ROUND_BRACKETS_OPEN in CREATE TABLE context
+    CREATE_PAREN_CLOSE, // ROUND_BRACKETS_CLOSE in CREATE TABLE context
 
     AND,
     OR,
@@ -59,6 +67,8 @@ const char* symbol_to_str[] = {"SELECT",
                                "VALUES",
                                "SET",
                                "JOIN",
+                               "CREATE",
+                               "TABLE",
 
                                "COMMA",
                                "SEMICOLON",
@@ -69,6 +79,12 @@ const char* symbol_to_str[] = {"SELECT",
                                "DOUBLE_QUOTED_VALUE",
                                "SINGLE_QUOTED_VALUE",
                                "SQL_IDENTIFIER",
+                               "TABLE_NAME",
+                               "COLUMN_NAME",
+                               "COLUMN_TYPE",
+                               "CREATE_COMMA",
+                               "CREATE_PAREN_OPEN",
+                               "CREATE_PAREN_CLOSE",
 
                                "AND",
                                "OR",
@@ -275,6 +291,8 @@ Keyword keywords[] = {
     {"join", JOIN, 0},
     {"and", AND, 0},
     {"or", OR, 0},
+    {"create", CREATE, 0},
+    {"table", TABLE, 0},
 };
 const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 
@@ -532,7 +550,8 @@ const Valid_Symbols expected_table[] = {
     [VALUES] = {{ROUND_BRACKETS_OPEN}, 1},
     [SET]    = {{SQL_IDENTIFIER}, 1},
     [JOIN]   = {{SQL_IDENTIFIER}, 1},
-
+    [CREATE] = {{TABLE}, 1},
+    [TABLE]  = {{TABLE_NAME}, 1},
     [COMMA]     = {{SQL_IDENTIFIER,
                     STAR,
                     NUMBER,
@@ -563,13 +582,26 @@ const Valid_Symbols expected_table[] = {
                          VALUES,
                          END},
                         12},
+    /* TABLE_NAME: a SQL_IDENTIFIER promoted to the table-name after TABLE. */
+    [TABLE_NAME] = {{CREATE_PAREN_OPEN}, 1},
+    /* COLUMN_NAME: a SQL_IDENTIFIER promoted to the name-position in CREATE TABLE. */
+    [COLUMN_NAME] = {{COLUMN_TYPE}, 1},
+    /* COLUMN_TYPE: a SQL_IDENTIFIER promoted to the type-position in CREATE TABLE.
+     * After a column type: either more columns via CREATE_COMMA, or close paren. */
+    [COLUMN_TYPE] = {{CREATE_COMMA, CREATE_PAREN_CLOSE}, 2},
+    /* CREATE_COMMA: a COMMA token in CREATE TABLE column-list context. */
+    [CREATE_COMMA] = {{COLUMN_NAME}, 1},
+    /* CREATE_PAREN_OPEN: a ( token in CREATE TABLE context. */
+    [CREATE_PAREN_OPEN] = {{COLUMN_NAME}, 1},
+    /* CREATE_PAREN_CLOSE: a ) token in CREATE TABLE context. */
+    [CREATE_PAREN_CLOSE] = {{SEMICOLON, END}, 2},
 
     [AND] = {{SQL_IDENTIFIER}, 1},
     [OR]  = {{SQL_IDENTIFIER}, 1},
 
     [ROUND_BRACKETS_OPEN] =
         {{SQL_IDENTIFIER, NUMBER, SINGLE_QUOTED_VALUE, DOUBLE_QUOTED_VALUE}, 4},
-    [ROUND_BRACKETS_CLOSE] = {{COMMA, SEMICOLON, AND, OR, WHERE}, 5},
+    [ROUND_BRACKETS_CLOSE] = {{COMMA, SEMICOLON, AND, OR, WHERE, END}, 6},
 
     [END] = {{END}, 1}};
 
@@ -594,13 +626,66 @@ bool validate_query_with_errors(const TokenStack* tokens,
         return true;
     }
 
-    Valid_Symbols expected = {{SELECT, UPDATE, DELETE, INSERT}, 4};
+    Valid_Symbols expected = {{SELECT, UPDATE, DELETE, INSERT, CREATE}, 5};
 
     for (int i = 0; i <= tokens->len; i++)
     {
         bool is_eof       = (i == tokens->len);
         const Token* t    = is_eof ? NULL : &tokens->elems[i];
         SqlSymbols t_type = is_eof ? END : t->type;
+
+        /* Promote real tokens to virtual symbols when those virtual symbols
+         * are expected (CREATE TABLE column-definition context).
+         * SQL_IDENTIFIER → TABLE_NAME / COLUMN_NAME / COLUMN_TYPE
+         * COMMA → CREATE_COMMA
+         * ROUND_BRACKETS_OPEN → CREATE_PAREN_OPEN
+         * ROUND_BRACKETS_CLOSE → CREATE_PAREN_CLOSE */
+        if (t_type == SQL_IDENTIFIER)
+        {
+            for (int j = 0; j < expected.len; j++)
+            {
+                if (expected.valids[j] == TABLE_NAME ||
+                    expected.valids[j] == COLUMN_NAME ||
+                    expected.valids[j] == COLUMN_TYPE)
+                {
+                    t_type = expected.valids[j];
+                    break;
+                }
+            }
+        }
+        else if (t_type == COMMA)
+        {
+            for (int j = 0; j < expected.len; j++)
+            {
+                if (expected.valids[j] == CREATE_COMMA)
+                {
+                    t_type = CREATE_COMMA;
+                    break;
+                }
+            }
+        }
+        else if (t_type == ROUND_BRACKETS_OPEN)
+        {
+            for (int j = 0; j < expected.len; j++)
+            {
+                if (expected.valids[j] == CREATE_PAREN_OPEN)
+                {
+                    t_type = CREATE_PAREN_OPEN;
+                    break;
+                }
+            }
+        }
+        else if (t_type == ROUND_BRACKETS_CLOSE)
+        {
+            for (int j = 0; j < expected.len; j++)
+            {
+                if (expected.valids[j] == CREATE_PAREN_CLOSE)
+                {
+                    t_type = CREATE_PAREN_CLOSE;
+                    break;
+                }
+            }
+        }
 
         bool is_valid = false;
         for (int j = 0; j < expected.len; j++)
@@ -714,7 +799,21 @@ static void expected_to_str(Valid_Symbols e, char* buf, size_t n)
     buf[0] = '\0';
     for (int i = 0; i < e.len; i++)
     {
-        strncat(buf, symbol_to_str[e.valids[i]], n - strlen(buf) - 1);
+        /* Map virtual CREATE TABLE symbols to their real token names */
+        const char* name;
+        SqlSymbols sym = e.valids[i];
+        if (sym == TABLE_NAME || sym == COLUMN_NAME || sym == COLUMN_TYPE)
+            name = symbol_to_str[SQL_IDENTIFIER];
+        else if (sym == CREATE_COMMA)
+            name = symbol_to_str[COMMA];
+        else if (sym == CREATE_PAREN_OPEN)
+            name = symbol_to_str[ROUND_BRACKETS_OPEN];
+        else if (sym == CREATE_PAREN_CLOSE)
+            name = symbol_to_str[ROUND_BRACKETS_CLOSE];
+        else
+            name = symbol_to_str[sym];
+
+        strncat(buf, name, n - strlen(buf) - 1);
         if (i < e.len - 1)
         {
             strncat(buf, " | ", n - strlen(buf) - 1);
